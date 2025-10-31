@@ -1,0 +1,10 @@
+{
+  "preferences": {
+    "quickEntryDictationShortcut": "capslock"
+  },
+  "mcpServers": {
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
+    }
+  }
+}
