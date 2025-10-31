@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  design-system-lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Sentry MCP Configuration
+      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+      - SENTRY_HOST=${SENTRY_HOST:-sentry.io}
+      - SENTRY_ORG_SLUG=${SENTRY_ORG_SLUG}
+      - SENTRY_PROJECT_SLUG=${SENTRY_PROJECT_SLUG}
+
+      # Sentry Runtime Error Tracking
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
+      - SENTRY_RELEASE=${SENTRY_RELEASE:-local}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - .env
+
+  # Optional: Run Sentry MCP server as a separate service
+  sentry-mcp:
+    image: node:20-alpine
+    command: npx @sentry/mcp-server@latest --access-token=${SENTRY_AUTH_TOKEN} --host=${SENTRY_HOST}
+    environment:
+      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+      - SENTRY_HOST=${SENTRY_HOST:-sentry.io}
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
