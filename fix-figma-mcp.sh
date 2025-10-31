@@ -2,24 +2,36 @@
 # Fix Figma MCP endpoint from /sse to /mcp
 
 echo "🔧 Fixing Figma MCP endpoint..."
+echo ""
 
-# Remove the incorrect built-in config
-echo "Removing incorrect figma-dev-mode-mcp-server config..."
-claude mcp remove figma-dev-mode-mcp-server 2>/dev/null
+# Remove the incorrect built-in config (this is the one added by UI button)
+echo "1. Removing incorrect figma-dev-mode-mcp-server config..."
+claude mcp remove figma-dev-mode-mcp-server 2>/dev/null || echo "   (not found - that's ok)"
 
-# Remove any existing figma-desktop config
-echo "Removing existing figma-desktop config..."
-claude mcp remove figma-desktop 2>/dev/null
+# Remove any existing figma-desktop config to start fresh
+echo ""
+echo "2. Removing existing figma-desktop config..."
+claude mcp remove figma-desktop 2>/dev/null || echo "   (not found - that's ok)"
 
 # Add the correct configuration
-echo "Adding correct Figma MCP configuration..."
+echo ""
+echo "3. Adding correct Figma MCP configuration..."
 claude mcp add --transport http figma-desktop http://127.0.0.1:3845/mcp
 
 # Verify
 echo ""
-echo "✅ Configuration updated. Checking connection..."
+echo "✅ Configuration updated. Current status:"
 claude mcp list | grep figma
 
 echo ""
-echo "⚠️  IMPORTANT: You MUST fully restart Conductor (Cmd+Q) for tools to be available!"
-echo "    Workspace restart is NOT enough - you need a full app restart."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚠️  CRITICAL NEXT STEPS:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "1. You MUST fully restart Conductor (Cmd+Q) for tools to work"
+echo "2. DO NOT click 'Enable Figma MCP' button in UI - it re-adds the broken config"
+echo "3. If you accidentally click it, just run this script again"
+echo ""
+echo "The figma-desktop connection is what you want (✓ Connected)"
+echo "Ignore any figma-dev-mode-mcp-server failures"
+echo ""
