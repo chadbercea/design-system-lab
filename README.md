@@ -73,30 +73,39 @@ Open [http://localhost:6006](http://localhost:6006) to view Storybook.
 - Production-like testing
 - Easy cleanup and reproducible builds
 
-## Sentry MCP Integration
+## MCP Integrations
 
-This project includes Sentry Model Context Protocol (MCP) server integration for AI-assisted error monitoring and debugging.
+This project includes Model Context Protocol (MCP) server integrations for AI-assisted development workflows.
 
-### Quick Setup
+### Available MCP Servers
 
-1. **Configure Sentry credentials:**
-   ```bash
-   ./scripts/setup-sentry-mcp.sh
-   ```
+#### 🔴 Sentry MCP - Error Monitoring & Debugging
 
-2. **Test the connection:**
-   ```bash
-   ./scripts/test-sentry-mcp.sh
-   ```
+AI-assisted error monitoring and debugging with Sentry.
 
-3. **Configure your MCP client:**
-   - Add the configuration from `mcp-config.json` to your MCP client
-   - Or use OAuth method: https://mcp.sentry.dev/mcp
+**Quick Setup:**
+1. Configure Sentry credentials: `./scripts/setup-sentry-mcp.sh`
+2. Test the connection: `./scripts/test-sentry-mcp.sh`
+3. Or use OAuth: https://mcp.sentry.dev/mcp
 
-### Documentation
+**Documentation:**
+- [SENTRY_MCP_SETUP.md](./SENTRY_MCP_SETUP.md) - Complete setup guide
+- [examples/sentry-mcp-workflows.md](./examples/sentry-mcp-workflows.md) - Usage examples
 
-- **[SENTRY_MCP_SETUP.md](./SENTRY_MCP_SETUP.md)** - Complete setup guide
-- **[examples/sentry-mcp-workflows.md](./examples/sentry-mcp-workflows.md)** - Usage examples and workflows
+#### 📝 Notion MCP - Documentation & Knowledge Management
+
+AI-assisted Notion workspace management for documentation, project tracking, and knowledge bases.
+
+**Quick Setup:**
+1. Create integration at https://www.notion.so/my-integrations
+2. Add token to `.env.local`: `NOTION_API_KEY=secret_your_token`
+3. Share pages with your integration
+4. Restart Claude Code
+
+**Documentation:**
+- [NOTION_QUICK_START.md](./NOTION_QUICK_START.md) - 5-minute setup
+- [NOTION_MCP_SETUP.md](./NOTION_MCP_SETUP.md) - Complete setup guide
+- [examples/notion-mcp-workflows.md](./examples/notion-mcp-workflows.md) - Usage examples
 
 ### Docker Support
 
@@ -106,4 +115,6 @@ Use the provided Docker configuration for containerized development:
 docker-compose -f docker-compose.sentry.yml up
 ```
 
-For more details, see the [Sentry MCP Setup Guide](./SENTRY_MCP_SETUP.md).
+### MCP Configuration
+
+All MCP servers are configured in `.mcp.json`. See [MCP_CONFIG_GUIDE.md](./MCP_CONFIG_GUIDE.md) for details on how configuration works.
