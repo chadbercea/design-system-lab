@@ -1,0 +1,54 @@
+services:
+  # MUI Sandbox with Storybook - Development Environment
+  mui-storybook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: mui-storybook-dev
+    ports:
+      - "6006:6006"
+    volumes:
+      # Mount source files for hot-reload
+      - ./src/mui-sandbox:/app/src/mui-sandbox
+      - ./.storybook:/app/.storybook
+      # Mount config files that might change
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Use named volume for node_modules to improve performance
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      # Enable polling for hot-reload in Docker (some systems need this)
+      - CHOKIDAR_USEPOLLING=true
+      # Reduce polling interval for faster hot-reload
+      - CHOKIDAR_INTERVAL=100
+    networks:
+      - mui-network
+    # Restart policy
+    restart: unless-stopped
+
+  # Production build service (optional - for testing production builds)
+  mui-storybook-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: mui-storybook-prod
+    ports:
+      - "8080:80"
+    networks:
+      - mui-network
+    profiles:
+      # Only start when explicitly requested: docker-compose --profile production up
+      - production
+
+# Named volume for node_modules (performance optimization)
+volumes:
+  node_modules:
+    driver: local
+
+# Custom network
+networks:
+  mui-network:
+    driver: bridge

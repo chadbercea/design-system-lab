@@ -16,7 +16,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-  tags: ['autodocs'],
+  // tags: ['autodocs'], // Disabled: causes importers error
   argTypes: {
     // Palette - Primary
     primaryMain: {

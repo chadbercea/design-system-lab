@@ -24,7 +24,7 @@ src/mui-sandbox/
 
 ## Getting Started
 
-### 1. Start Storybook
+### Option 1: Local Development
 
 ```bash
 npm run storybook
@@ -32,7 +32,23 @@ npm run storybook
 
 This launches Storybook at http://localhost:6006
 
-### 2. Explore Components
+### Option 2: Docker (Recommended)
+
+For consistent development environments:
+
+```bash
+# Using the helper script (from project root)
+./docker-helper.sh start
+
+# Or using docker-compose directly
+docker-compose up
+```
+
+This launches Storybook at http://localhost:6006 with hot-reload enabled.
+
+See **[DOCKER_SETUP.md](../../DOCKER_SETUP.md)** for complete Docker documentation.
+
+### Explore Components
 
 Browse the **MUI Sandbox** section in Storybook sidebar:
 - Button - All button variants and states
@@ -40,7 +56,7 @@ Browse the **MUI Sandbox** section in Storybook sidebar:
 - Card - Card component variants
 - Typography - Complete typography scale
 
-### 3. Customize the Theme
+### Customize the Theme
 
 Open `src/mui-sandbox/theme/theme.ts` and start customizing:
 
@@ -60,7 +76,7 @@ export const muiTheme = createTheme({
 });
 ```
 
-**Hot-reload is enabled** - changes to `theme.ts` automatically update Storybook.
+**Hot-reload is enabled** - changes to `theme.ts` automatically update Storybook (works in both local and Docker environments).
 
 ## Theme Customization Resources
 
@@ -116,12 +132,44 @@ MUI's theme object is powerful. Here's what you can customize:
 4. Try theme overrides for specific components
 5. Document your learnings!
 
+## Docker Support
+
+The MUI sandbox is fully Dockerized for consistent development environments!
+
+### Benefits
+
+- **Consistent across machines** - Same Node version, same dependencies
+- **Isolated environment** - Won't conflict with other projects
+- **Production-like testing** - Test builds in containerized environment
+- **Easy cleanup** - `docker-compose down -v` for clean state
+
+### Quick Commands
+
+```bash
+# Start development environment
+./docker-helper.sh start
+
+# Start in background
+./docker-helper.sh start-bg
+
+# View logs
+./docker-helper.sh logs
+
+# Stop
+./docker-helper.sh stop
+
+# Clean rebuild
+./docker-helper.sh rebuild
+```
+
+For complete Docker documentation, see **[DOCKER_SETUP.md](../../DOCKER_SETUP.md)**
+
 ## Notes
 
 - This sandbox is **completely isolated** from the main Next.js app
 - MUI and shadcn/Radix UI never need to interact
 - Experiment freely - you can't break anything!
-- Eventually this will be Dockerized for consistent dev environments
+- Docker configuration ready for both development and production
 
 ---
 
