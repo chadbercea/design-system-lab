@@ -35,6 +35,44 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## MUI Sandbox with Storybook
+
+This project includes a dedicated MUI sandbox for theme experimentation and component exploration.
+
+### Quick Start (Local)
+
+```bash
+npm run storybook
+```
+
+Open [http://localhost:6006](http://localhost:6006) to view Storybook.
+
+### Quick Start (Docker)
+
+For consistent development environments across machines:
+
+```bash
+# Using the helper script
+./docker-helper.sh start
+
+# Or using docker-compose directly
+docker-compose up
+```
+
+Open [http://localhost:6006](http://localhost:6006) to view Storybook.
+
+### Documentation
+
+- **[src/mui-sandbox/README.md](./src/mui-sandbox/README.md)** - MUI sandbox overview and theme customization guide
+- **[DOCKER_SETUP.md](./DOCKER_SETUP.md)** - Complete Docker setup guide with troubleshooting
+
+### Why Docker?
+
+- Consistent environment across all machines
+- Isolated dependencies
+- Production-like testing
+- Easy cleanup and reproducible builds
+
 ## MCP Integrations
 
 This project includes Model Context Protocol (MCP) server integrations for AI-assisted development workflows.
