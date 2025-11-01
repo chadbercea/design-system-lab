@@ -2,6 +2,13 @@
   "mcpServers": {
     "sentry": {
       "url": "https://mcp.sentry.dev/mcp"
+    },
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-notion"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
     }
   }
 }
