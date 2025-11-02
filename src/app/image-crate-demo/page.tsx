@@ -17,6 +17,8 @@ export default function ImageCrateDemoPage() {
   const [enableGlow, setEnableGlow] = useState(false);
   const [scale, setScale] = useState(1);
   const [color, setColor] = useState('#0db7ed');
+  const [showLoadingText, setShowLoadingText] = useState(true);
+  const [imageName, setImageName] = useState('nginx:latest');
 
   return (
     <main className="w-screen h-screen bg-gray-900 flex flex-col">
@@ -42,6 +44,16 @@ export default function ImageCrateDemoPage() {
               }`}
             >
               Enter
+            </button>
+            <button
+              onClick={() => setState('docking')}
+              className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                state === 'docking'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Dock
             </button>
             <button
               onClick={() => setState('settled')}
@@ -106,6 +118,27 @@ export default function ImageCrateDemoPage() {
               />
               Enable Glow
             </label>
+            <label className="flex items-center gap-2 text-gray-300 text-sm">
+              <input
+                type="checkbox"
+                checked={showLoadingText}
+                onChange={(e) => setShowLoadingText(e.target.checked)}
+                className="w-4 h-4"
+              />
+              Show Loading Text
+            </label>
+          </div>
+
+          {/* Image Name Control */}
+          <div className="flex gap-4 items-center flex-wrap">
+            <span className="text-gray-300 text-sm font-semibold w-32">Image Name:</span>
+            <input
+              type="text"
+              value={imageName}
+              onChange={(e) => setImageName(e.target.value)}
+              className="px-3 py-1 rounded bg-gray-700 text-gray-300 border border-gray-600"
+              placeholder="nginx:latest"
+            />
           </div>
 
           {/* Scale Control */}
@@ -161,11 +194,19 @@ export default function ImageCrateDemoPage() {
           state={state}
           onAnimationComplete={(newState) => {
             console.log('Animation completed:', state, '→', newState);
+            // Auto-transition: entering → docking → settled
+            if (newState === 'docking') {
+              setState('docking');
+            } else if (newState === 'settled') {
+              setState('settled');
+            }
           }}
           showLogo={showLogo}
           enableGlow={enableGlow}
           scale={scale}
           color={color}
+          imageName={imageName}
+          showLoadingText={showLoadingText}
           enableFloating={state === 'floating'}
           showControls={true}
         />
