@@ -25,6 +25,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionStart, setTransitionStart] = useState<number | null>(null);
   const [hasTransitioned, setHasTransitioned] = useState(false);
+  const [idleAnimationStart, setIdleAnimationStart] = useState<number | null>(null);
 
   // Create opaque dark blue-grey wall material (using MeshBasicMaterial so it doesn't need lights)
   const wallMaterial = useMemo(() =>
@@ -94,12 +95,14 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setIsTransitioning(false);
       setUsesDottedMaterial(true);
       setCrateState('entering');
+      setIdleAnimationStart(null);
       dottedWireframeMaterial.opacity = 0.7;
       solidWireframeMaterial.opacity = 1.0;
       solidWireframeMaterial.transparent = false;
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
+      setIdleAnimationStart(null);
     }
   }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
 
@@ -126,9 +129,48 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           (material as any).dashOffset = -elapsed * 0.5;
         }
       }
+
+      // Idle state animation after choreography completes
+      // (when crate is floating and transition is done)
+      if (crateState === 'floating' && !isTransitioning && hasTransitioned) {
+        // Start idle animation timer on first frame after transition
+        if (idleAnimationStart === null) {
+          setIdleAnimationStart(Date.now());
+        }
+
+        if (idleAnimationStart !== null) {
+          const idleElapsed = (Date.now() - idleAnimationStart) / 1000;
+
+          // Subtle breathing motion (scale pulse)
+          // 4-second cycle: 1.0 → 1.02 → 1.0
+          const breatheCycle = Math.sin(idleElapsed * (Math.PI / 2)) * 0.01 + 1.01; // Range: 1.0 to 1.02
+          if (containerRef.current) {
+            containerRef.current.scale.setScalar(breatheCycle);
+          }
+
+          // Subtle glow pulse on edges
+          // Make the solid wireframe material pulse gently
+          if (wireframeRef.current && !usesDottedMaterial) {
+            const material = wireframeRef.current.material as THREE.LineBasicMaterial;
+            if (material && 'opacity' in material) {
+              // Pulse between 0.8 and 1.0 opacity over 3 seconds
+              const glowPulse = 0.9 + Math.sin(idleElapsed * (Math.PI * 2 / 3)) * 0.1;
+              material.opacity = glowPulse;
+              material.transparent = true;
+              material.needsUpdate = true;
+            }
+          }
+        }
+      } else {
+        // Reset scale when not in idle state
+        if (containerRef.current && crateState !== 'floating') {
+          containerRef.current.scale.setScalar(1.0);
+        }
+      }
     } else {
       if (containerRef.current) {
         containerRef.current.rotation.y = 0;
+        containerRef.current.scale.setScalar(1.0); // Reset scale when not in building state
       }
     }
 
