@@ -10,9 +10,20 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 interface ContainerSceneProps {
   state?: ContainerState;
   className?: string;
+  height?: string;
+  showControls?: boolean;
+  materializeWalls?: boolean;
+  materializationDuration?: number;
 }
 
-export function ContainerScene({ state = 'ready', className = '' }: ContainerSceneProps) {
+export function ContainerScene({
+  state = 'ready',
+  className = '',
+  height = '600px',
+  showControls = true,
+  materializeWalls = false,
+  materializationDuration = 10.0
+}: ContainerSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const handleDoubleClick = () => {
@@ -23,7 +34,11 @@ export function ContainerScene({ state = 'ready', className = '' }: ContainerSce
   };
 
   return (
-    <div className={`w-full h-full ${className}`} onDoubleClick={handleDoubleClick}>
+    <div
+      className={`w-full ${className}`}
+      style={{ height }}
+      onDoubleClick={handleDoubleClick}
+    >
       <Canvas
         shadows
         camera={{
@@ -62,21 +77,27 @@ export function ContainerScene({ state = 'ready', className = '' }: ContainerSce
         />
 
         {/* Container */}
-        <Container3D state={state} />
+        <Container3D
+          state={state}
+          materializeWalls={materializeWalls}
+          materializationDuration={materializationDuration}
+        />
 
         {/* OrbitControls with configured constraints */}
-        <OrbitControls
-          ref={controlsRef}
-          enableDamping
-          dampingFactor={0.05}
-          rotateSpeed={0.8}
-          zoomSpeed={0.8}
-          minDistance={5}
-          maxDistance={30}
-          minPolarAngle={0}
-          maxPolarAngle={Math.PI / 2}
-          target={[0, 2.5, 0]}
-        />
+        {showControls && (
+          <OrbitControls
+            ref={controlsRef}
+            enableDamping
+            dampingFactor={0.05}
+            rotateSpeed={0.8}
+            zoomSpeed={0.8}
+            minDistance={5}
+            maxDistance={30}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI / 2}
+            target={[0, 2.5, 0]}
+          />
+        )}
       </Canvas>
     </div>
   );
