@@ -12,8 +12,6 @@ interface ContainerSceneProps {
   className?: string;
   height?: string;
   showControls?: boolean;
-  materializeWalls?: boolean;
-  materializationDuration?: number;
 }
 
 export function ContainerScene({
@@ -21,8 +19,6 @@ export function ContainerScene({
   className = '',
   height = '600px',
   showControls = true,
-  materializeWalls = false,
-  materializationDuration = 10.0
 }: ContainerSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
@@ -77,11 +73,7 @@ export function ContainerScene({
         />
 
         {/* Container */}
-        <Container3D
-          state={state}
-          materializeWalls={materializeWalls}
-          materializationDuration={materializationDuration}
-        />
+        <Container3D state={state} />
 
         {/* OrbitControls with configured constraints */}
         {showControls && (
