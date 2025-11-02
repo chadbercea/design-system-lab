@@ -7,6 +7,7 @@ import { Html } from '@react-three/drei';
 import type { ContainerState } from '@/lib/container-colors';
 import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
 import { ImageCrateModel } from './ImageCrate/ImageCrateModel';
+import { ContainerDoors } from './ContainerDoors';
 
 interface Container3DProps {
   state?: ContainerState;
@@ -25,6 +26,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionStart, setTransitionStart] = useState<number | null>(null);
   const [hasTransitioned, setHasTransitioned] = useState(false);
+  const [doorState, setDoorState] = useState<'open' | 'closing' | 'closed'>(state === 'building' ? 'open' : 'closed');
   const [idleAnimationStart, setIdleAnimationStart] = useState<number | null>(null);
 
   // Create opaque dark blue-grey wall material (using MeshBasicMaterial so it doesn't need lights)
@@ -95,6 +97,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setIsTransitioning(false);
       setUsesDottedMaterial(true);
       setCrateState('entering');
+      setDoorState('open');
       setIdleAnimationStart(null);
       dottedWireframeMaterial.opacity = 0.7;
       solidWireframeMaterial.opacity = 1.0;
@@ -102,6 +105,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
+      setDoorState('closed');
       setIdleAnimationStart(null);
     }
   }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
@@ -229,6 +233,14 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         </mesh>
       )}
 
+      {/* Container doors */}
+      <ContainerDoors
+        state={doorState}
+        onAnimationComplete={() => {
+          setDoorState('closed');
+        }}
+      />
+
       {/* Image crate - only visible in building state */}
       {state === 'building' && (
         <ImageCrateModel
@@ -243,7 +255,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
               // After entering completes, start docking
               setCrateState('docking');
             } else if (newState === 'settled' && usesDottedMaterial && !hasTransitioned) {
-              // After docking completes and settles, transition wireframe
+              // After docking completes and settles, start door closing and wireframe transition
+              setDoorState('closing');
               setIsTransitioning(true);
               setTransitionStart(Date.now());
               setHasTransitioned(true);

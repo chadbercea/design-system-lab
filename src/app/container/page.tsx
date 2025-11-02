@@ -29,7 +29,6 @@ import { Button } from '@/components/ui/button';
  * @see ILI-98: [Developer] Walls materialize (opacity transition)
  */
 export default function ContainerDemo() {
-  const [materializeWalls, setMaterializeWalls] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   return (
     <div className="min-h-screen bg-zinc-950 p-8">
@@ -51,8 +50,6 @@ export default function ContainerDemo() {
                 key={animationKey}
                 height="600px"
                 showControls={true}
-                materializeWalls={materializeWalls}
-                materializationDuration={10.0}
               />
             </CardContent>
           </Card>
@@ -111,28 +108,17 @@ export default function ContainerDemo() {
                 <div className="space-y-2">
                   <Button
                     onClick={() => {
-                      setMaterializeWalls(true);
-                      setAnimationKey((prev) => prev + 1);
-                    }}
-                    className="w-full"
-                    disabled={materializeWalls}
-                  >
-                    Start Materialization
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setMaterializeWalls(false);
                       setAnimationKey((prev) => prev + 1);
                     }}
                     variant="outline"
                     className="w-full"
                   >
-                    Reset
+                    Reset Camera
                   </Button>
                 </div>
                 <div className="space-y-1 text-sm text-zinc-400">
                   <div className="font-semibold text-zinc-300">Status:</div>
-                  <div>{materializeWalls ? 'Materializing (10s)' : 'Ready'}</div>
+                  <div>Ready</div>
                 </div>
               </CardContent>
             </Card>
