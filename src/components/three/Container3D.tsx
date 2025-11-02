@@ -4,118 +4,104 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
-import {
-  createContainerWallMaterial,
-  createWireframeMaterial,
-  createDottedWireframeMaterial,
-} from '@/lib/container-materials';
 import type { ContainerState } from '@/lib/container-colors';
 import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
-import { ImageCrateModel } from './ImageCrate';
+import { ImageCrateModel } from './ImageCrate/ImageCrateModel';
 
 interface Container3DProps {
   state?: ContainerState;
-  /** Enable wall materialization animation (opacity 0 → 1) */
-  materializeWalls?: boolean;
-  /** Duration of the materialization animation in seconds (default: 10s) */
-  materializationDuration?: number;
 }
 
-export function Container3D({
-  state = 'ready',
-  materializeWalls = false,
-  materializationDuration = 10.0
-}: Container3DProps) {
+export function Container3D({ state = 'ready' }: Container3DProps) {
   const containerRef = useRef<THREE.Group>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
-  const glowMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
-  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'settled' | 'floating'>('floating');
+  const glowMeshRef = useRef<THREE.Mesh>(null);
 
-  // Animation state
-  const [wallOpacity, setWallOpacity] = useState(materializeWalls ? 0 : 1);
-  const [animationStartTime, setAnimationStartTime] = useState<number | null>(null);
-
-  // Create materials using the factory functions
-  // Wall materials start transparent if materialization is enabled
-  const wallMaterial = useMemo(() =>
-    createContainerWallMaterial({
-      transparent: materializeWalls,
-      opacity: materializeWalls ? 0 : 1
-    }),
-    [materializeWalls]
+  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'settled' | 'floating'>(
+    state === 'building' ? 'entering' : 'floating'
   );
 
-  const solidWireframeMaterial = useMemo(() => createWireframeMaterial(), []);
-  const dottedWireframeMaterial = useMemo(() => createDottedWireframeMaterial(), []);
+  const [usesDottedMaterial, setUsesDottedMaterial] = useState(state === 'building');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionStart, setTransitionStart] = useState<number | null>(null);
+  const [hasTransitioned, setHasTransitioned] = useState(false);
 
-  // Load Docker logo texture for side panel
-  const dockerLogoTexture = useMemo(() => {
-    try {
-      const loader = new THREE.TextureLoader();
-      // For now, create a simple texture using canvas
-      // In production, this would load an actual Docker logo image
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Create a simple Docker-blue background with "DOCKER" text
-        ctx.fillStyle = '#2496ED';
-        ctx.fillRect(0, 0, 512, 512);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 72px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('DOCKER', 256, 256);
-      }
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      return texture;
-    } catch (error) {
-      console.warn('Failed to create Docker logo texture:', error);
-      return null;
-    }
-  }, []);
+  // Create opaque dark blue-grey wall material (using MeshBasicMaterial so it doesn't need lights)
+  const wallMaterial = useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: CONTAINER_COLORS.WALL_SURFACE,
+      side: THREE.DoubleSide,
+    }), []
+  );
 
-  // Material for the side panel with Docker logo
-  const logoMaterial = useMemo(() => {
-    const material = createContainerWallMaterial({
-      transparent: materializeWalls,
-      opacity: materializeWalls ? 0 : 1
-    });
-    if (dockerLogoTexture) {
-      material.map = dockerLogoTexture;
-      material.needsUpdate = true;
-    }
-    return material;
-  }, [dockerLogoTexture, materializeWalls]);
+  // Create bright solid wireframe material (using brighter color for visibility)
+  const solidWireframeMaterial = useMemo(() =>
+    new THREE.LineBasicMaterial({
+      color: 0x90CAF9, // Much brighter blue for visibility
+      linewidth: 3,
+      transparent: false,
+      opacity: 1.0,
+      depthTest: false,
+      depthWrite: false,
+    }), []
+  );
 
-  // Create glow material for building state
+  // Create dotted wireframe material
+  const dottedWireframeMaterial = useMemo(() =>
+    new THREE.LineDashedMaterial({
+      color: 0x90CAF9, // Same bright blue
+      linewidth: 2,
+      scale: 1,
+      dashSize: 0.3,
+      gapSize: 0.2,
+      transparent: true,
+      opacity: 0.7,
+      depthTest: false,
+      depthWrite: false,
+    }), []
+  );
+
+  // Current wireframe material
+  const currentWireframeMaterial = usesDottedMaterial ? dottedWireframeMaterial : solidWireframeMaterial;
+
+  // Building state glow material
   const glowMaterial = useMemo(() => {
-    if (state === 'building') {
-      const material = new THREE.MeshBasicMaterial({
-        color: CONTAINER_COLORS.BUILDING,
-        transparent: true,
-        opacity: 0.6,
-        side: THREE.FrontSide,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
-      glowMaterialRef.current = material;
-      return material;
-    }
-    return null;
+    if (state !== 'building') return null;
+    return new THREE.MeshBasicMaterial({
+      color: CONTAINER_COLORS.BUILDING,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.BackSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
   }, [state]);
 
-  // Choose wireframe material based on state
-  const wireframeMaterial = state === 'building' ? dottedWireframeMaterial : solidWireframeMaterial;
-
-  // Start animation when materializeWalls becomes true
+  // Compute line distances for dashed material
   useEffect(() => {
-    if (materializeWalls && animationStartTime === null) {
-      setAnimationStartTime(Date.now());
+    if (wireframeRef.current && usesDottedMaterial) {
+      const geom = wireframeRef.current.geometry;
+      if (geom instanceof THREE.BufferGeometry && 'computeLineDistances' in geom) {
+        (geom as any).computeLineDistances();
+      }
     }
-  }, [materializeWalls, animationStartTime]);
+  }, [usesDottedMaterial]);
+
+  // Reset state when switching to building
+  useEffect(() => {
+    if (state === 'building') {
+      setHasTransitioned(false);
+      setIsTransitioning(false);
+      setUsesDottedMaterial(true);
+      setCrateState('entering');
+      dottedWireframeMaterial.opacity = 0.7;
+      solidWireframeMaterial.opacity = 1.0;
+      solidWireframeMaterial.transparent = false;
+    } else {
+      setUsesDottedMaterial(false);
+      setCrateState('floating');
+    }
+  }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
 
   // Animation loop
   useFrame((frameState) => {
@@ -123,163 +109,122 @@ export function Container3D({
 
     // Building state animations
     if (state === 'building') {
-      // Slow rotation of container
+      // Rotation
       if (containerRef.current) {
-        containerRef.current.rotation.y = elapsed * 0.2; // Slow rotation
+        containerRef.current.rotation.y = elapsed * 0.2;
       }
 
-      // Pulsing glow effect
-      if (glowMaterialRef.current) {
-        glowMaterialRef.current.opacity = getBuildingPulseOpacity(elapsed);
+      // Pulsing glow
+      if (glowMeshRef.current && glowMeshRef.current.material instanceof THREE.MeshBasicMaterial) {
+        glowMeshRef.current.material.opacity = getBuildingPulseOpacity(elapsed);
       }
 
-      // Animate dash offset for "marching ants" effect
-      if (wireframeRef.current && wireframeRef.current.material instanceof THREE.LineDashedMaterial) {
-        wireframeRef.current.material.dashOffset = -elapsed * 0.5; // Marching animation
+      // Marching ants
+      if (wireframeRef.current && usesDottedMaterial) {
+        const material = wireframeRef.current.material as THREE.LineDashedMaterial;
+        if ('dashOffset' in material) {
+          (material as any).dashOffset = -elapsed * 0.5;
+        }
       }
     } else {
-      // Reset rotation for non-building states
       if (containerRef.current) {
         containerRef.current.rotation.y = 0;
       }
     }
 
-    // Animate wall opacity if materialization is enabled
-    if (materializeWalls && animationStartTime !== null) {
-      const materialElapsed = (Date.now() - animationStartTime) / 1000; // Convert to seconds
-      const progress = Math.min(materialElapsed / materializationDuration, 1.0);
+    // Handle wireframe transition
+    if (isTransitioning && transitionStart !== null) {
+      const elapsed = (Date.now() - transitionStart) / 1000;
+      const progress = Math.min(elapsed / 1.0, 1.0);
 
-      // Ease-in-out cubic easing for smooth transition
-      const easedProgress = progress < 0.5
+      const eased = progress < 0.5
         ? 4 * progress * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-      const newOpacity = easedProgress;
+      dottedWireframeMaterial.opacity = 0.7 * (1 - eased);
+      solidWireframeMaterial.opacity = eased;
+      solidWireframeMaterial.transparent = progress < 1.0;
 
-      if (newOpacity !== wallOpacity) {
-        setWallOpacity(newOpacity);
-        wallMaterial.opacity = newOpacity;
-        wallMaterial.needsUpdate = true;
-        logoMaterial.opacity = newOpacity;
-        logoMaterial.needsUpdate = true;
+      dottedWireframeMaterial.needsUpdate = true;
+      solidWireframeMaterial.needsUpdate = true;
+
+      if (progress >= 0.5 && usesDottedMaterial) {
+        setUsesDottedMaterial(false);
+      }
+
+      if (progress >= 1.0) {
+        setIsTransitioning(false);
+        solidWireframeMaterial.opacity = 1.0;
+        solidWireframeMaterial.transparent = false;
+        solidWireframeMaterial.needsUpdate = true;
       }
     }
   });
 
   return (
     <group ref={containerRef}>
-      {/* Container walls - rendered as individual panels to support different materials */}
-      <group position={[0, 2.5, 0]}>
-        {/* Front wall (facing +Z) - with Docker logo */}
-        <mesh position={[0, 0, 4]}>
-          <planeGeometry args={[6, 5]} />
-          <primitive object={logoMaterial} attach="material" />
-        </mesh>
+      {/* Container box (single mesh with DoubleSide) */}
+      <mesh position={[0, 2.5, 0]}>
+        <boxGeometry args={[6, 5, 8]} />
+        <primitive object={wallMaterial} attach="material" />
+      </mesh>
 
-        {/* Back wall (facing -Z) */}
-        <mesh position={[0, 0, -4]} rotation={[0, Math.PI, 0]}>
-          <planeGeometry args={[6, 5]} />
-          <primitive object={wallMaterial} attach="material" />
-        </mesh>
-
-        {/* Left wall (facing -X) */}
-        <mesh position={[-3, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <planeGeometry args={[8, 5]} />
-          <primitive object={wallMaterial} attach="material" />
-        </mesh>
-
-        {/* Right wall (facing +X) */}
-        <mesh position={[3, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <planeGeometry args={[8, 5]} />
-          <primitive object={wallMaterial} attach="material" />
-        </mesh>
-
-        {/* Top wall */}
-        <mesh position={[0, 2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[6, 8]} />
-          <primitive object={wallMaterial} attach="material" />
-        </mesh>
-
-        {/* Bottom wall */}
-        <mesh position={[0, -2.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[6, 8]} />
-          <primitive object={wallMaterial} attach="material" />
-        </mesh>
-      </group>
-
-      {/* Container wireframe edges */}
+      {/* Wireframe edges */}
       <lineSegments
         ref={wireframeRef}
         position={[0, 2.5, 0]}
-        onUpdate={(self) => {
-          // Compute line distances for dashed material
-          if (self.geometry) {
-            self.geometry.computeBoundingSphere();
-            // @ts-ignore - computeLineDistances exists on BufferGeometry
-            self.geometry.computeLineDistances();
-          }
-        }}
+        renderOrder={999}
       >
         <edgesGeometry args={[new THREE.BoxGeometry(6, 5, 8)]} />
-        <primitive object={wireframeMaterial} attach="material" />
+        <primitive object={currentWireframeMaterial} attach="material" />
       </lineSegments>
 
-      {/* Glow layer for building state */}
+      {/* Building state glow */}
       {state === 'building' && glowMaterial && (
-        <mesh position={[0, 2.5, 0]}>
-          <boxGeometry args={[6.1, 5.1, 8.1]} />
+        <mesh ref={glowMeshRef} position={[0, 2.5, 0]} scale={[1.02, 1.02, 1.02]}>
+          <boxGeometry args={[6, 5, 8]} />
           <primitive object={glowMaterial} attach="material" />
         </mesh>
       )}
 
-      {/* New Docker image crate (ILI-95) */}
-      <ImageCrateModel
-        state={crateState}
-        showLogo={true}
-        enableGlow={state === 'running'}
-        enableFloating={crateState === 'floating'}
-        scale={1}
-        onAnimationComplete={(newState) => {
-          console.log('Crate animation complete:', newState);
-          if (newState === 'settled') {
-            setCrateState('floating');
-          }
-        }}
-      />
-
-      {/* Building state text overlay */}
+      {/* Image crate - only visible in building state */}
       {state === 'building' && (
-        <Html
-          position={[0, 7, 0]}
-          center
-          distanceFactor={10}
-          style={{
-            pointerEvents: 'none',
-            userSelect: 'none',
+        <ImageCrateModel
+          state={crateState}
+          showLogo={true}
+          scale={1.5}
+          onAnimationComplete={(newState) => {
+            if (newState === 'settled' && usesDottedMaterial && !hasTransitioned) {
+              setIsTransitioning(true);
+              setTransitionStart(Date.now());
+              setHasTransitioned(true);
+              setCrateState('floating');
+            }
           }}
-        >
-          <div
-            style={{
-              background: 'rgba(33, 150, 243, 0.2)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(33, 150, 243, 0.4)',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              color: '#64B5F6',
-              fontSize: '18px',
-              fontWeight: '600',
-              whiteSpace: 'nowrap',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              textAlign: 'center',
-              animation: 'pulse 2s ease-in-out infinite',
-            }}
-          >
+        />
+      )}
+
+      {/* Building text */}
+      {state === 'building' && (
+        <Html position={[0, 7, 0]} center distanceFactor={10}>
+          <div style={{
+            background: 'rgba(33, 150, 243, 0.2)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(33, 150, 243, 0.4)',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            color: '#64B5F6',
+            fontSize: '18px',
+            fontWeight: '600',
+            whiteSpace: 'nowrap',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}>
             Building container...
           </div>
         </Html>
       )}
 
-      {/* Ground plane for reference */}
+      {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.2} />

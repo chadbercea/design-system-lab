@@ -56,13 +56,13 @@ export function createContainerWallMaterial(
  */
 export function createWireframeMaterial(): THREE.LineBasicMaterial {
   return new THREE.LineBasicMaterial({
-    color: CONTAINER_COLORS.WIREFRAME_PRIMARY,
+    color: CONTAINER_COLORS.WALL_HIGHLIGHT, // Using brighter color for visibility on dark walls
     linewidth: 2,
     transparent: false,
     opacity: 1.0,
     fog: false,
-    depthWrite: true,
-    depthTest: true,
+    depthWrite: false,
+    depthTest: false,
   });
 }
 
@@ -81,15 +81,16 @@ export function createWireframeMaterial(): THREE.LineBasicMaterial {
  */
 export function createDottedWireframeMaterial(): THREE.LineDashedMaterial {
   return new THREE.LineDashedMaterial({
-    color: CONTAINER_COLORS.WIREFRAME_DOTTED,
+    color: CONTAINER_COLORS.WALL_HIGHLIGHT, // Using brighter color for visibility on dark walls
     linewidth: 1,
     scale: 1,
     dashSize: 0.3,
     gapSize: 0.2,
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.7, // Increased from 0.5 for better visibility
     fog: false,
     depthWrite: false,
+    depthTest: false,
   });
 }
 
