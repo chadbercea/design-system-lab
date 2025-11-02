@@ -65,6 +65,9 @@ Open [http://localhost:6006](http://localhost:6006) to view Storybook.
 
 - **[src/mui-sandbox/README.md](./src/mui-sandbox/README.md)** - MUI sandbox overview and theme customization guide
 - **[DOCKER_SETUP.md](./DOCKER_SETUP.md)** - Complete Docker setup guide with troubleshooting
+- **[docs/IMAGE_CRATE_DESIGN_SPEC.md](./docs/IMAGE_CRATE_DESIGN_SPEC.md)** - Docker image crate visual design specification
+- **[docs/IMAGE_CRATE_IMPLEMENTATION_GUIDE.md](./docs/IMAGE_CRATE_IMPLEMENTATION_GUIDE.md)** - Technical implementation guide for 3D crate component
+- **[docs/IMAGE_CRATE_VISUAL_REFERENCE.md](./docs/IMAGE_CRATE_VISUAL_REFERENCE.md)** - Visual reference with concept sketches and asset specs
 
 ### Why Docker?
 
