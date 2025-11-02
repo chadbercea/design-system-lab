@@ -275,7 +275,7 @@ export const MaterialPresets = {
  * @param material - Material to dispose
  */
 export function disposeMaterial(material: THREE.Material): void {
-  if ('map' in material && material.map) {
+  if ('map' in material && material.map && material.map instanceof THREE.Texture) {
     material.map.dispose();
   }
   material.dispose();
