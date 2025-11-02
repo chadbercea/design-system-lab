@@ -41,8 +41,8 @@ export default function ContainerDemo() {
         <div className="grid gap-6 lg:grid-cols-[1fr,400px]">
           {/* Main 3D Scene */}
           <Card className="overflow-hidden border-zinc-800 bg-zinc-900">
-            <CardContent className="p-0">
-              <ContainerScene height="600px" showControls={true} />
+            <CardContent className="p-0" style={{ height: '600px' }}>
+              <ContainerScene />
             </CardContent>
           </Card>
 

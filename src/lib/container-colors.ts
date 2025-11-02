@@ -26,10 +26,16 @@ export const CONTAINER_COLORS = {
   BACKGROUND: 0x121212,         // Near black
   BACKGROUND_GRADIENT: 0x1A1A1A, // Dark grey (falloff)
 
-  // Image crate
+  // Image crate (original amber)
   CRATE_BASE: 0xFFA726,         // Amber 400 (main color)
   CRATE_GLOW: 0xFFB74D,         // Amber 300 (pulsing glow)
   CRATE_ICON: 0xFFFFFF,         // White (Docker logo)
+
+  // Docker image crate (Docker blue - from ILI-89 design spec)
+  DOCKER_BLUE: 0x0db7ed,        // Docker blue (primary)
+  DOCKER_BLUE_LIGHT: 0x4dc9f0,  // Docker blue light (gradient top)
+  DOCKER_BLUE_DARK: 0x0995ba,   // Docker blue dark (logo/accents)
+  DOCKER_NAVY: 0x066da5,        // Docker navy (deep accent)
 
   // UI accents
   LABEL_TEXT: 0xE0E0E0,         // Light grey (labels)

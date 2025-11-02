@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
@@ -8,10 +8,10 @@ import {
   createContainerWallMaterial,
   createWireframeMaterial,
   createDottedWireframeMaterial,
-  createImageCrateMaterial
 } from '@/lib/container-materials';
 import type { ContainerState } from '@/lib/container-colors';
 import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
+import { ImageCrateModel } from './ImageCrate';
 
 interface Container3DProps {
   state?: ContainerState;
@@ -19,9 +19,9 @@ interface Container3DProps {
 
 export function Container3D({ state = 'ready' }: Container3DProps) {
   const containerRef = useRef<THREE.Group>(null);
-  const crateRef = useRef<THREE.Mesh>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const glowMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
+  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'settled' | 'floating'>('floating');
 
   // Create materials using the factory functions
   const wallMaterial = useMemo(() => createContainerWallMaterial(), []);
@@ -30,7 +30,6 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
     const material = createDottedWireframeMaterial();
     return material;
   }, []);
-  const crateMaterial = useMemo(() => createImageCrateMaterial(), []);
 
   // Create glow material for building state
   const glowMaterial = useMemo(() => {
@@ -55,11 +54,6 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   // Animation loop
   useFrame((frameState) => {
     const elapsed = frameState.clock.elapsedTime;
-
-    // Animate the crate (subtle floating effect)
-    if (crateRef.current) {
-      crateRef.current.position.y = Math.sin(elapsed * 0.5) * 0.1;
-    }
 
     // Building state animations
     if (state === 'building') {
@@ -118,17 +112,20 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         </mesh>
       )}
 
-      {/* Image crate inside container */}
-      <mesh ref={crateRef} position={[0, 1.5, 0]}>
-        <boxGeometry args={[1.5, 1.5, 1.5]} />
-        <primitive object={crateMaterial} attach="material" />
-      </mesh>
-
-      {/* Crate wireframe */}
-      <lineSegments position={[0, 1.5, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(1.5, 1.5, 1.5)]} />
-        <lineBasicMaterial color="#f59e0b" opacity={0.6} transparent />
-      </lineSegments>
+      {/* New Docker image crate (ILI-95) */}
+      <ImageCrateModel
+        state={crateState}
+        showLogo={true}
+        enableGlow={state === 'running'}
+        enableFloating={crateState === 'floating'}
+        scale={1}
+        onAnimationComplete={(newState) => {
+          console.log('Crate animation complete:', newState);
+          if (newState === 'settled') {
+            setCrateState('floating');
+          }
+        }}
+      />
 
       {/* Building state text overlay */}
       {state === 'building' && (
