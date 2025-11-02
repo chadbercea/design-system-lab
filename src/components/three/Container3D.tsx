@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { createContainerWallMaterial, createWireframeMaterial, createImageCrateMaterial } from '@/lib/container-materials';
+import { createContainerWallMaterial, createWireframeMaterial, createDockerImageCrateMaterial } from '@/lib/container-materials';
 import type { ContainerState } from '@/lib/container-colors';
+import { ImageCrateModel } from './ImageCrate';
 
 interface Container3DProps {
   state?: ContainerState;
@@ -12,19 +13,11 @@ interface Container3DProps {
 
 export function Container3D({ state = 'ready' }: Container3DProps) {
   const containerRef = useRef<THREE.Group>(null);
-  const crateRef = useRef<THREE.Mesh>(null);
+  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'settled' | 'floating'>('floating');
 
   // Create materials using the factory functions
   const wallMaterial = useMemo(() => createContainerWallMaterial(), []);
   const wireframeMaterial = useMemo(() => createWireframeMaterial(), []);
-  const crateMaterial = useMemo(() => createImageCrateMaterial(), []);
-
-  // Animate the crate (subtle floating effect)
-  useFrame((state) => {
-    if (crateRef.current) {
-      crateRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-    }
-  });
 
   return (
     <group ref={containerRef}>
@@ -40,17 +33,20 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         <primitive object={wireframeMaterial} attach="material" />
       </lineSegments>
 
-      {/* Image crate inside container */}
-      <mesh ref={crateRef} position={[0, 1.5, 0]}>
-        <boxGeometry args={[1.5, 1.5, 1.5]} />
-        <primitive object={crateMaterial} attach="material" />
-      </mesh>
-
-      {/* Crate wireframe */}
-      <lineSegments position={[0, 1.5, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(1.5, 1.5, 1.5)]} />
-        <lineBasicMaterial color="#f59e0b" opacity={0.6} transparent />
-      </lineSegments>
+      {/* New Docker image crate (ILI-95) */}
+      <ImageCrateModel
+        state={crateState}
+        showLogo={true}
+        enableGlow={state === 'running'}
+        enableFloating={crateState === 'floating'}
+        scale={1}
+        onAnimationComplete={(newState) => {
+          console.log('Crate animation complete:', newState);
+          if (newState === 'settled') {
+            setCrateState('floating');
+          }
+        }}
+      />
 
       {/* Ground plane for reference */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>

@@ -160,6 +160,30 @@ export function createImageCrateMaterial(): THREE.MeshStandardMaterial {
 }
 
 /**
+ * Create material for Docker-branded image crate (new design from ILI-89)
+ *
+ * Properties:
+ * - Color: Docker blue (#0db7ed)
+ * - Metalness: 0.1 (10% - low metalness for painted surface)
+ * - Roughness: 0.4 (40% - matte finish as specified)
+ * - Gradient effect from Docker blue to lighter shade
+ *
+ * @see /docs/IMAGE_CRATE_DESIGN_SPEC.md - Section 3 (Final Specifications)
+ * @returns MeshStandardMaterial configured for Docker image crate
+ */
+export function createDockerImageCrateMaterial(): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({
+    color: CONTAINER_COLORS.DOCKER_BLUE,
+    metalness: 0.1,
+    roughness: 0.4,
+    transparent: false,
+    opacity: 1.0,
+    side: THREE.FrontSide,
+    flatShading: false,
+  });
+}
+
+/**
  * Create material for Docker logo/icon on crate
  *
  * Properties:
