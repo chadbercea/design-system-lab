@@ -65,11 +65,10 @@ export const useImageCrateAnimation = (
         const duration = 1.5;
         const progress = Math.min(elapsedTime / duration, 1);
 
-        // Arc trajectory (specified in design: 200 units away, 100 units up)
-        // Adjusted for the existing container scale
+        // Arc trajectory - fly in from far upper right
         const arcProgress = easeInOutCubic(progress);
-        const startPos: CratePosition = { x: 3, y: 2, z: -4 };
-        const endPos: CratePosition = { x: 0, y: 1.5, z: 0 };
+        const startPos: CratePosition = { x: 8, y: 8, z: -8 }; // Start far away, high up
+        const endPos: CratePosition = { x: 0, y: 2.5, z: 4.5 }; // In front of container at its center height
 
         group.position.x = startPos.x + (endPos.x - startPos.x) * arcProgress;
         group.position.y = startPos.y + (endPos.y - startPos.y) * arcProgress +
@@ -93,20 +92,20 @@ export const useImageCrateAnimation = (
       }
 
       case 'settled': {
-        // Idle position in container
-        group.position.set(0, 1.5, 0);
+        // Idle position in front of container (visible)
+        group.position.set(0, 2.5, 4.5);
         group.rotation.y = 0;
         group.scale.setScalar(1);
         break;
       }
 
       case 'floating': {
-        // Subtle floating animation (±2 units on Y-axis, 4s cycle)
+        // Subtle floating animation (±2 units on Y-axis, 4s cycle) in front of container
         const floatSpeed = 0.5; // Complete cycle every 4 seconds
         const floatAmount = 0.05;
-        group.position.y = 1.5 + Math.sin(elapsedTime * floatSpeed * Math.PI * 2) * floatAmount;
+        group.position.y = 2.5 + Math.sin(elapsedTime * floatSpeed * Math.PI * 2) * floatAmount;
         group.position.x = 0;
-        group.position.z = 0;
+        group.position.z = 4.5; // In front of container
         group.rotation.y = 0;
         group.scale.setScalar(1);
         break;
@@ -117,7 +116,7 @@ export const useImageCrateAnimation = (
         const progress = Math.min(elapsedTime / duration, 1);
 
         const exitProgress = easeInOutCubic(progress);
-        const startPos: CratePosition = { x: 0, y: 1.5, z: 0 };
+        const startPos: CratePosition = { x: 0, y: 2.5, z: 4.5 };
         const endPos: CratePosition = { x: -3, y: 3, z: -4 };
 
         group.position.x = startPos.x + (endPos.x - startPos.x) * exitProgress;
