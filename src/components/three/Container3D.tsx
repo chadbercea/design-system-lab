@@ -1,10 +1,17 @@
 'use client';
 
 import { useRef, useMemo, useState, useEffect } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { createContainerWallMaterial, createWireframeMaterial, createImageCrateMaterial } from '@/lib/container-materials';
+import { Html } from '@react-three/drei';
+import {
+  createContainerWallMaterial,
+  createWireframeMaterial,
+  createDottedWireframeMaterial,
+  createImageCrateMaterial
+} from '@/lib/container-materials';
 import type { ContainerState } from '@/lib/container-colors';
+import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
 
 interface Container3DProps {
   state?: ContainerState;
@@ -21,6 +28,8 @@ export function Container3D({
 }: Container3DProps) {
   const containerRef = useRef<THREE.Group>(null);
   const crateRef = useRef<THREE.Mesh>(null);
+  const wireframeRef = useRef<THREE.LineSegments>(null);
+  const glowMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
 
   // Animation state
   const [wallOpacity, setWallOpacity] = useState(materializeWalls ? 0 : 1);
@@ -30,19 +39,14 @@ export function Container3D({
   // Wall materials start transparent if materialization is enabled
   const wallMaterial = useMemo(() =>
     createContainerWallMaterial({
-      transparent: true,
+      transparent: materializeWalls,
       opacity: materializeWalls ? 0 : 1
     }),
     [materializeWalls]
   );
 
-  const wireframeMaterial = useMemo(() => {
-    const material = createWireframeMaterial();
-    // Ensure wireframe renders on top of transparent/opaque surfaces
-    material.depthTest = true;
-    material.depthWrite = false;
-    return material;
-  }, []);
+  const solidWireframeMaterial = useMemo(() => createWireframeMaterial(), []);
+  const dottedWireframeMaterial = useMemo(() => createDottedWireframeMaterial(), []);
   const crateMaterial = useMemo(() => createImageCrateMaterial(), []);
 
   // Load Docker logo texture for side panel
@@ -77,7 +81,7 @@ export function Container3D({
   // Material for the side panel with Docker logo
   const logoMaterial = useMemo(() => {
     const material = createContainerWallMaterial({
-      transparent: true,
+      transparent: materializeWalls,
       opacity: materializeWalls ? 0 : 1
     });
     if (dockerLogoTexture) {
@@ -87,6 +91,26 @@ export function Container3D({
     return material;
   }, [dockerLogoTexture, materializeWalls]);
 
+  // Create glow material for building state
+  const glowMaterial = useMemo(() => {
+    if (state === 'building') {
+      const material = new THREE.MeshBasicMaterial({
+        color: CONTAINER_COLORS.BUILDING,
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.FrontSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      glowMaterialRef.current = material;
+      return material;
+    }
+    return null;
+  }, [state]);
+
+  // Choose wireframe material based on state
+  const wireframeMaterial = state === 'building' ? dottedWireframeMaterial : solidWireframeMaterial;
+
   // Start animation when materializeWalls becomes true
   useEffect(() => {
     if (materializeWalls && animationStartTime === null) {
@@ -94,16 +118,42 @@ export function Container3D({
     }
   }, [materializeWalls, animationStartTime]);
 
-  // Animate the crate (subtle floating effect) and wall materialization
-  useFrame((state) => {
+  // Animation loop
+  useFrame((frameState) => {
+    const elapsed = frameState.clock.elapsedTime;
+
+    // Animate the crate (subtle floating effect)
     if (crateRef.current) {
-      crateRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+      crateRef.current.position.y = Math.sin(elapsed * 0.5) * 0.1;
+    }
+
+    // Building state animations
+    if (state === 'building') {
+      // Slow rotation of container
+      if (containerRef.current) {
+        containerRef.current.rotation.y = elapsed * 0.2; // Slow rotation
+      }
+
+      // Pulsing glow effect
+      if (glowMaterialRef.current) {
+        glowMaterialRef.current.opacity = getBuildingPulseOpacity(elapsed);
+      }
+
+      // Animate dash offset for "marching ants" effect
+      if (wireframeRef.current && wireframeRef.current.material instanceof THREE.LineDashedMaterial) {
+        wireframeRef.current.material.dashOffset = -elapsed * 0.5; // Marching animation
+      }
+    } else {
+      // Reset rotation for non-building states
+      if (containerRef.current) {
+        containerRef.current.rotation.y = 0;
+      }
     }
 
     // Animate wall opacity if materialization is enabled
     if (materializeWalls && animationStartTime !== null) {
-      const elapsed = (Date.now() - animationStartTime) / 1000; // Convert to seconds
-      const progress = Math.min(elapsed / materializationDuration, 1.0);
+      const materialElapsed = (Date.now() - animationStartTime) / 1000; // Convert to seconds
+      const progress = Math.min(materialElapsed / materializationDuration, 1.0);
 
       // Ease-in-out cubic easing for smooth transition
       const easedProgress = progress < 0.5
@@ -163,20 +213,30 @@ export function Container3D({
         </mesh>
       </group>
 
-      {/* Container wireframe edges - rendered on top with polygon offset */}
-      <lineSegments position={[0, 2.5, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(6, 5, 8), 1]} />
-        <lineBasicMaterial
-          color="#37474F"
-          linewidth={2}
-          transparent={false}
-          depthTest={true}
-          depthWrite={false}
-          polygonOffset={true}
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-1}
-        />
+      {/* Container wireframe edges */}
+      <lineSegments
+        ref={wireframeRef}
+        position={[0, 2.5, 0]}
+        onUpdate={(self) => {
+          // Compute line distances for dashed material
+          if (self.geometry) {
+            self.geometry.computeBoundingSphere();
+            // @ts-ignore - computeLineDistances exists on BufferGeometry
+            self.geometry.computeLineDistances();
+          }
+        }}
+      >
+        <edgesGeometry args={[new THREE.BoxGeometry(6, 5, 8)]} />
+        <primitive object={wireframeMaterial} attach="material" />
       </lineSegments>
+
+      {/* Glow layer for building state */}
+      {state === 'building' && glowMaterial && (
+        <mesh position={[0, 2.5, 0]}>
+          <boxGeometry args={[6.1, 5.1, 8.1]} />
+          <primitive object={glowMaterial} attach="material" />
+        </mesh>
+      )}
 
       {/* Image crate inside container */}
       <mesh ref={crateRef} position={[0, 1.5, 0]}>
@@ -189,6 +249,38 @@ export function Container3D({
         <edgesGeometry args={[new THREE.BoxGeometry(1.5, 1.5, 1.5)]} />
         <lineBasicMaterial color="#f59e0b" opacity={0.6} transparent />
       </lineSegments>
+
+      {/* Building state text overlay */}
+      {state === 'building' && (
+        <Html
+          position={[0, 7, 0]}
+          center
+          distanceFactor={10}
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(33, 150, 243, 0.2)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(33, 150, 243, 0.4)',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              color: '#64B5F6',
+              fontSize: '18px',
+              fontWeight: '600',
+              whiteSpace: 'nowrap',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              textAlign: 'center',
+              animation: 'pulse 2s ease-in-out infinite',
+            }}
+          >
+            Building container...
+          </div>
+        </Html>
+      )}
 
       {/* Ground plane for reference */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
