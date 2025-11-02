@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ContainerScene } from '@/components/three/ContainerScene';
 import {
   Card,
@@ -9,23 +9,28 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 /**
  * Container Visualization Demo Page
  *
- * Displays a static 3D shipping container with visible edges.
- * This is the foundation for the container build visualization system.
+ * Displays a 3D shipping container with materialization animation.
+ * This demonstrates the "seal & run" phase where walls fade from transparent to opaque.
  *
  * Features:
- * - Static container with shipping container proportions (1:1:2.5 ratio)
+ * - Container with shipping container proportions (1:1:2.5 ratio)
  * - Visible wireframe edges using EdgesGeometry
  * - Interactive camera controls (orbit, zoom, pan)
+ * - Wall materialization animation (opacity 0 → 1)
+ * - Docker logo texture on front panel
  * - 30° elevation viewing angle
  * - Three-light setup (ambient, directional, rim)
  *
- * @see ILI-91: [Developer] Render static container with edges
+ * @see ILI-98: [Developer] Walls materialize (opacity transition)
  */
 export default function ContainerDemo() {
+  const [materializeWalls, setMaterializeWalls] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
   return (
     <div className="min-h-screen bg-zinc-950 p-8">
       <div className="mx-auto max-w-7xl">
@@ -42,7 +47,13 @@ export default function ContainerDemo() {
           {/* Main 3D Scene */}
           <Card className="overflow-hidden border-zinc-800 bg-zinc-900">
             <CardContent className="p-0">
-              <ContainerScene height="600px" showControls={true} />
+              <ContainerScene
+                key={animationKey}
+                height="600px"
+                showControls={true}
+                materializeWalls={materializeWalls}
+                materializationDuration={10.0}
+              />
             </CardContent>
           </Card>
 
@@ -91,7 +102,44 @@ export default function ContainerDemo() {
 
             <Card className="border-zinc-800 bg-zinc-900">
               <CardHeader>
-                <CardTitle className="text-zinc-50">Controls</CardTitle>
+                <CardTitle className="text-zinc-50">Animation Controls</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Test wall materialization
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => {
+                      setMaterializeWalls(true);
+                      setAnimationKey((prev) => prev + 1);
+                    }}
+                    className="w-full"
+                    disabled={materializeWalls}
+                  >
+                    Start Materialization
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setMaterializeWalls(false);
+                      setAnimationKey((prev) => prev + 1);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Reset
+                  </Button>
+                </div>
+                <div className="space-y-1 text-sm text-zinc-400">
+                  <div className="font-semibold text-zinc-300">Status:</div>
+                  <div>{materializeWalls ? 'Materializing (10s)' : 'Ready'}</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-zinc-800 bg-zinc-900">
+              <CardHeader>
+                <CardTitle className="text-zinc-50">Camera Controls</CardTitle>
                 <CardDescription className="text-zinc-400">
                   Interact with the scene
                 </CardDescription>
