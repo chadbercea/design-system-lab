@@ -45,6 +45,7 @@ import {
   Settings as SettingsIcon,
   Apps as AppsIcon,
   SmartToy as AgentIcon,
+  SmartToy as SmartToyIcon,
   ViewInAr as ContainersIcon,
   Image as ImagesIcon,
   Folder as VolumesIcon,
