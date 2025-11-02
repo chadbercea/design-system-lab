@@ -18,6 +18,7 @@
 
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { Html } from '@react-three/drei';
 import { useImageCrateAnimation } from './useImageCrateAnimation';
 import type { ImageCrateProps } from './types';
 
@@ -28,8 +29,13 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
   showLogo = true,
   color = '#0db7ed', // Docker blue
   enableGlow = false,
+  imageName = 'nginx:latest',
+  showLoadingText = false,
 }) => {
   const groupRef = useImageCrateAnimation(state, onAnimationComplete);
+
+  // Show loading text during entering and docking states
+  const shouldShowText = showLoadingText && (state === 'entering' || state === 'docking');
 
   // Create main crate material with gradient effect
   const crateMaterial = useMemo(() => {
@@ -174,6 +180,38 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
         <edgesGeometry args={[new THREE.BoxGeometry(1.3, 0.8, 0.8)]} />
         <lineBasicMaterial color="#4dc9f0" opacity={0.4} transparent />
       </lineSegments>
+
+      {/* Loading text overlay */}
+      {shouldShowText && (
+        <Html
+          position={[0, 1.2, 0]}
+          center
+          distanceFactor={8}
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(13, 183, 237, 0.15)',
+              backdropFilter: 'blur(12px)',
+              border: '1.5px solid rgba(13, 183, 237, 0.5)',
+              borderRadius: '12px',
+              padding: '14px 28px',
+              color: '#64B5F6',
+              fontSize: '16px',
+              fontWeight: '600',
+              whiteSpace: 'nowrap',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              boxShadow: '0 8px 32px rgba(13, 183, 237, 0.2)',
+              textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            Loading image: {imageName}
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

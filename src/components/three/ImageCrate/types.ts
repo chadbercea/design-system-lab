@@ -8,6 +8,7 @@
 export type AnimationState =
   | 'idle'
   | 'entering'
+  | 'docking'
   | 'settled'
   | 'exiting'
   | 'floating';
@@ -33,6 +34,12 @@ export interface ImageCrateProps {
 
   /** Enable subtle glow effect */
   enableGlow?: boolean;
+
+  /** Image name to display (e.g., "nginx:latest") */
+  imageName?: string;
+
+  /** Show loading text overlay during entering/docking */
+  showLoadingText?: boolean;
 }
 
 export interface CratePosition {

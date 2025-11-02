@@ -43,6 +43,8 @@ export const ImageCrate: React.FC<ImageCrateCanvasProps> = ({
   showLogo = true,
   color = '#0db7ed',
   enableGlow = false,
+  imageName = 'nginx:latest',
+  showLoadingText = false,
   showControls = true,
   cameraPosition = [3, 2, 5],
 }) => {
@@ -84,6 +86,8 @@ export const ImageCrate: React.FC<ImageCrateCanvasProps> = ({
             showLogo={showLogo}
             color={color}
             enableGlow={enableGlow}
+            imageName={imageName}
+            showLoadingText={showLoadingText}
           />
 
           {/* Ground Shadow */}

@@ -17,7 +17,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const glowMeshRef = useRef<THREE.Mesh>(null);
 
-  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'settled' | 'floating'>(
+  const [crateState, setCrateState] = useState<'idle' | 'entering' | 'docking' | 'settled' | 'floating'>(
     state === 'building' ? 'entering' : 'floating'
   );
 
@@ -193,8 +193,15 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           state={crateState}
           showLogo={true}
           scale={1.5}
+          imageName="nginx:latest"
+          showLoadingText={true}
           onAnimationComplete={(newState) => {
-            if (newState === 'settled' && usesDottedMaterial && !hasTransitioned) {
+            // Handle animation state transitions
+            if (newState === 'docking') {
+              // After entering completes, start docking
+              setCrateState('docking');
+            } else if (newState === 'settled' && usesDottedMaterial && !hasTransitioned) {
+              // After docking completes and settles, transition wireframe
               setIsTransitioning(true);
               setTransitionStart(Date.now());
               setHasTransitioned(true);
