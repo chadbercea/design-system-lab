@@ -1,0 +1,16 @@
+{
+  "name": "docker-api-spike",
+  "version": "1.0.0",
+  "description": "Spike to validate Docker Engine API access for container event monitoring",
+  "type": "module",
+  "scripts": {
+    "events": "node events-listener.js",
+    "test-connection": "node test-connection.js"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.31"
+  }
+}
