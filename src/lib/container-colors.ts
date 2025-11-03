@@ -19,8 +19,8 @@ export const CONTAINER_COLORS = {
   // Structural colors
   WIREFRAME_PRIMARY: 0x37474F,  // Blue-grey 800 (main edges)
   WIREFRAME_DOTTED: 0x546E7A,   // Blue-grey 600 (inactive lines)
-  WALL_SURFACE: 0x263238,       // Blue-grey 900 (opaque walls)
-  WALL_HIGHLIGHT: 0x455A64,     // Blue-grey 700 (wall highlights)
+  WALL_SURFACE: 0xFFFFFF,       // White (opaque walls)
+  WALL_HIGHLIGHT: 0xFFFFFF,     // White (wall highlights)
 
   // Background
   BACKGROUND: 0x121212,         // Near black

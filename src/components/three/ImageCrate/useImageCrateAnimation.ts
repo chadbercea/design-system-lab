@@ -110,10 +110,10 @@ export const useImageCrateAnimation = (
           ? easeInOutCubic(progress / 0.7) * 0.7 // 70% of animation is smooth movement
           : 0.7 + easeOutBounce((progress - 0.7) / 0.3) * 0.3; // Last 30% is settling with bounce
 
-        // Start: in front of container entrance
+        // Start: in front of container entrance (beyond door position)
         const startPos: CratePosition = { x: 0, y: CONTAINER.CENTER_Y, z: CONTAINER.ENTRANCE_Z + 2 };
-        // End: docked inside container (centered, slightly below center)
-        const endPos: CratePosition = { x: 0, y: CONTAINER.CENTER_Y - 0.5, z: 0 };
+        // End: centered inside container - at x:0, y:center, z:0 (true center)
+        const endPos: CratePosition = { x: 0, y: CONTAINER.CENTER_Y, z: 0 };
 
         group.position.x = startPos.x + (endPos.x - startPos.x) * eased;
         group.position.y = startPos.y + (endPos.y - startPos.y) * eased;
@@ -139,8 +139,8 @@ export const useImageCrateAnimation = (
       }
 
       case 'settled': {
-        // Final position: docked inside container
-        group.position.set(0, CONTAINER.CENTER_Y - 0.5, 0);
+        // Final position: centered inside container
+        group.position.set(0, CONTAINER.CENTER_Y, 0);
         group.rotation.y = 0;
         group.rotation.z = 0;
         group.scale.setScalar(1);
@@ -151,9 +151,9 @@ export const useImageCrateAnimation = (
         // Subtle floating animation inside container
         const floatSpeed = 0.5; // Complete cycle every 4 seconds
         const floatAmount = 0.08;
-        group.position.y = (CONTAINER.CENTER_Y - 0.5) + Math.sin(elapsedTime * floatSpeed * Math.PI * 2) * floatAmount;
+        group.position.y = CONTAINER.CENTER_Y + Math.sin(elapsedTime * floatSpeed * Math.PI * 2) * floatAmount;
         group.position.x = 0;
-        group.position.z = 0; // Inside container
+        group.position.z = 0; // Centered inside container
         group.rotation.y = Math.sin(elapsedTime * 0.3) * 0.05; // Gentle rotation
         group.rotation.z = 0;
         group.scale.setScalar(1);

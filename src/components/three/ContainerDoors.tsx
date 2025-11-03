@@ -1,11 +1,16 @@
 import React, { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { Html } from '@react-three/drei'
 import { CONTAINER_COLORS } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
   state: 'open' | 'closing' | 'closed'
+  containerState?: 'building' | 'ready' | 'running' | 'error'
+  wireframeMaterial: THREE.LineBasicMaterial | THREE.LineDashedMaterial
+  buildingDoorOpacity?: number
   onAnimationComplete?: () => void
+  terminalLines?: string[]
 }
 
 // Container dimensions (matching Container3D.tsx)
@@ -22,7 +27,7 @@ const DOOR = {
   height: 4.8, // Slightly less than container height
   depth: 0.15, // Door thickness
   gap: 0.1, // Gap between doors when closed
-  zPosition: 4, // At the front of the container (ENTRANCE_Z)
+  zPosition: 3.93, // Just inside the front wall of container (depth/2 - door.depth/2) = 4 - 0.075
 }
 
 // Animation timing
@@ -54,9 +59,11 @@ const settleEffect = (t: number): number => {
   return t >= 1.0 ? 1.0 : t
 }
 
-export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsProps) {
+export function ContainerDoors({ state, containerState, wireframeMaterial, buildingDoorOpacity = 0, onAnimationComplete, terminalLines = [] }: ContainerDoorsProps) {
   const leftDoorRef = useRef<THREE.Group>(null)
   const rightDoorRef = useRef<THREE.Group>(null)
+  const leftDoorWireframeRef = useRef<THREE.LineSegments>(null)
+  const rightDoorWireframeRef = useRef<THREE.LineSegments>(null)
   const animationStartRef = useRef<number | null>(null)
   const hasCompletedRef = useRef(false)
 
@@ -71,39 +78,54 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
     }
   }, [state])
 
-  // Door materials
+  // Door materials - black in building/error (with animated opacity in building), docker blue in running
   const doorMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: CONTAINER_COLORS.WALL_SURFACE,
-        metalness: 0.8,
-        roughness: 0.3,
+    () => {
+      let color = CONTAINER_COLORS.WALL_SURFACE;
+      let opacity = 1.0;
+
+      if (containerState === 'building') {
+        color = 0x000000; // Black for building state
+        opacity = buildingDoorOpacity;
+      } else if (containerState === 'error') {
+        color = 0x000000; // Black for error state
+        opacity = 0.0; // Doors stay transparent/open in error state
+      } else if (containerState === 'running') {
+        color = 0x1d63ed; // Docker blue
+      } else if (state === 'open' || containerState === 'ready') {
+        opacity = 0.0;
+      }
+
+      return new THREE.MeshBasicMaterial({
+        color,
         side: THREE.DoubleSide,
-      }),
-    []
+        transparent: true,
+        opacity,
+        colorWrite: opacity > 0.01,
+      });
+    },
+    [state, containerState, buildingDoorOpacity]
   )
 
   const hingeMataterial = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
-        color: CONTAINER_COLORS.WALL_HIGHLIGHT,
-        metalness: 0.9,
-        roughness: 0.2,
+      new THREE.MeshBasicMaterial({
+        color: 0xFFFFFF,
       }),
     []
   )
 
-  const edgeMaterial = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: CONTAINER_COLORS.WIREFRAME_PRIMARY,
-        linewidth: 2,
-      }),
-    []
-  )
-
-  // Animation loop
+  // Animation loop - includes line distance computation for dashed materials
   useFrame(() => {
+    // Compute line distances every frame for dashed materials
+    if (leftDoorWireframeRef.current) {
+      leftDoorWireframeRef.current.computeLineDistances()
+    }
+    if (rightDoorWireframeRef.current) {
+      rightDoorWireframeRef.current.computeLineDistances()
+    }
+
+    // Door animation
     if (state === 'closing' && animationStartRef.current && leftDoorRef.current && rightDoorRef.current) {
       const elapsed = (Date.now() - animationStartRef.current) / 1000
       const totalDuration = ANIMATION.duration + ANIMATION.settleTime
@@ -113,15 +135,21 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
       // Apply easing
       const easedProgress = easeInOutCubic(settledProgress)
 
-      // Left door rotates from 90° (open, parallel to container front) to 0° (closed)
-      // Hinge is on the left edge
-      const leftRotation = Math.PI / 2 * (1 - easedProgress)
+      // Left door rotates from -90° (fully open outward) to 0° (closed)
+      const leftRotation = -(Math.PI / 2) * (1 - easedProgress)
       leftDoorRef.current.rotation.y = leftRotation
 
-      // Right door rotates from -90° (open) to 0° (closed)
-      // Hinge is on the right edge
-      const rightRotation = -Math.PI / 2 * (1 - easedProgress)
+      // Right door rotates from 90° (fully open outward) to 0° (closed)
+      const rightRotation = (Math.PI / 2) * (1 - easedProgress)
       rightDoorRef.current.rotation.y = rightRotation
+
+      // Fade door opacity during closing (only for running/error states)
+      // In building state, opacity is controlled by buildingDoorOpacity prop
+      if (doorMaterial && containerState !== 'building' && containerState !== 'ready') {
+        doorMaterial.opacity = easedProgress
+        doorMaterial.colorWrite = easedProgress > 0.01
+        doorMaterial.needsUpdate = true
+      }
 
       // Check if animation is complete
       if (elapsed >= totalDuration && !hasCompletedRef.current) {
@@ -131,13 +159,20 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
         }
       }
     } else if (state === 'open' && leftDoorRef.current && rightDoorRef.current) {
-      // Doors fully open (parallel to container front)
-      leftDoorRef.current.rotation.y = Math.PI / 2
-      rightDoorRef.current.rotation.y = -Math.PI / 2
+      // Doors fully open outward at 90°
+      leftDoorRef.current.rotation.y = -Math.PI / 2
+      rightDoorRef.current.rotation.y = Math.PI / 2
     } else if (state === 'closed' && leftDoorRef.current && rightDoorRef.current) {
       // Doors fully closed
       leftDoorRef.current.rotation.y = 0
       rightDoorRef.current.rotation.y = 0
+
+      // Ensure doors are fully opaque when closed (unless in building/ready state where they should be transparent)
+      if (doorMaterial && containerState !== 'building' && containerState !== 'ready') {
+        doorMaterial.opacity = 1.0
+        doorMaterial.colorWrite = true
+        doorMaterial.needsUpdate = true
+      }
     }
   })
 
@@ -158,10 +193,10 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
           <primitive object={doorMaterial} attach="material" />
         </mesh>
 
-        {/* Door edges */}
-        <lineSegments position={[DOOR.width / 2, 0, 0]}>
+        {/* Door edges - use container wireframe material */}
+        <lineSegments ref={leftDoorWireframeRef} position={[DOOR.width / 2, 0, 0]} renderOrder={999} frustumCulled={false}>
           <edgesGeometry args={[new THREE.BoxGeometry(DOOR.width, DOOR.height, DOOR.depth)]} />
-          <primitive object={edgeMaterial} attach="material" />
+          <primitive object={wireframeMaterial} attach="material" />
         </lineSegments>
 
         {/* Hinges */}
@@ -174,6 +209,39 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
             <primitive object={hingeMataterial} attach="material" />
           </mesh>
         ))}
+
+        {/* Terminal text on left door surface - only visible when door is visible */}
+        {containerState === 'building' && terminalLines.length > 0 && (
+          <Html
+            position={[DOOR.width / 2, 0.5, DOOR.depth / 2 + 0.01]}
+            transform
+            distanceFactor={2.5}
+            style={{ width: '100%' }}
+          >
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.95)',
+              border: '1px solid rgba(0, 255, 0, 0.5)',
+              borderRadius: '2px',
+              padding: '4px 6px',
+              color: '#00FF00',
+              fontSize: '7px',
+              fontWeight: '500',
+              fontFamily: 'Monaco, Courier New, monospace',
+              lineHeight: '1.3',
+              whiteSpace: 'pre',
+              textAlign: 'left',
+              pointerEvents: 'none',
+              maxWidth: `${DOOR.width * 40}px`,
+              boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)',
+            }}>
+              {terminalLines.map((line, index) => (
+                <div key={index}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          </Html>
+        )}
       </group>
 
       {/* Right Door */}
@@ -187,10 +255,10 @@ export function ContainerDoors({ state, onAnimationComplete }: ContainerDoorsPro
           <primitive object={doorMaterial} attach="material" />
         </mesh>
 
-        {/* Door edges */}
-        <lineSegments position={[-DOOR.width / 2, 0, 0]}>
+        {/* Door edges - use container wireframe material */}
+        <lineSegments ref={rightDoorWireframeRef} position={[-DOOR.width / 2, 0, 0]} renderOrder={999} frustumCulled={false}>
           <edgesGeometry args={[new THREE.BoxGeometry(DOOR.width, DOOR.height, DOOR.depth)]} />
-          <primitive object={edgeMaterial} attach="material" />
+          <primitive object={wireframeMaterial} attach="material" />
         </lineSegments>
 
         {/* Hinges */}

@@ -38,7 +38,7 @@ export function ContainerScene({
       <Canvas
         shadows
         camera={{
-          position: [0, 5, 10],
+          position: state === 'building' || state === 'ready' ? [-6, 6, 10] : [0, 5, 10],
           fov: 75,
           near: 0.1,
           far: 1000,
