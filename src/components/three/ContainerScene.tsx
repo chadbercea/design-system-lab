@@ -1,8 +1,9 @@
 'use client';
 
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { PerspectiveCamera } from 'three';
 import { Container3D } from './Container3D';
 import type { ContainerState } from '@/lib/container-colors';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -12,6 +13,26 @@ interface ContainerSceneProps {
   className?: string;
   height?: string;
   showControls?: boolean;
+  cameraAspect?: number;
+  onCameraReady?: (camera: PerspectiveCamera) => void;
+}
+
+function CameraAspectUpdater({ aspect }: { aspect?: number }) {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    if (camera && 'aspect' in camera) {
+      const perspectiveCamera = camera as PerspectiveCamera;
+      const newAspect = aspect || size.width / size.height;
+
+      if (perspectiveCamera.aspect !== newAspect) {
+        perspectiveCamera.aspect = newAspect;
+        perspectiveCamera.updateProjectionMatrix();
+      }
+    }
+  }, [aspect, camera, size]);
+
+  return null;
 }
 
 export function ContainerScene({
@@ -19,6 +40,8 @@ export function ContainerScene({
   className = '',
   height = '600px',
   showControls = true,
+  cameraAspect,
+  onCameraReady,
 }: ContainerSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
@@ -44,10 +67,16 @@ export function ContainerScene({
           far: 1000,
         }}
         gl={{ alpha: false }}
-        onCreated={({ gl, scene }) => {
+        onCreated={({ gl, scene, camera }) => {
           gl.setClearColor('#000000', 1);
+          if (onCameraReady && 'aspect' in camera) {
+            onCameraReady(camera as PerspectiveCamera);
+          }
         }}
       >
+        {/* Camera aspect ratio updater */}
+        <CameraAspectUpdater aspect={cameraAspect} />
+
         {/* Ambient light - base fill */}
         <ambientLight color="#404040" intensity={0.4} />
 
