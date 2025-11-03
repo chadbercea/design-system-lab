@@ -60,9 +60,9 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
   // Wall material - invisible in building/ready, docker blue in running, white in error
   const wallMaterial = useMemo(() => {
-    let color = CONTAINER_COLORS.WALL_SURFACE;
+    let color: number = CONTAINER_COLORS.WALL_SURFACE;
     if (state === 'running') {
-      color = 0x1d63ed; // Docker blue
+      color = 0x1d63ed as number; // Docker blue
     }
 
     return new THREE.MeshBasicMaterial({
