@@ -70,47 +70,21 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
   const terminalTextureRef = useRef<THREE.CanvasTexture | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  // Create and update canvas texture for terminal text
+  // Create canvas texture for terminal text
   useEffect(() => {
     if (terminalLines.length === 0) return
 
-    // Create canvas if it doesn't exist
+    // Create canvas with aspect ratio matching door (2.5 : 4.2)
     if (!canvasRef.current) {
       canvasRef.current = document.createElement('canvas')
-      canvasRef.current.width = 1024
-      canvasRef.current.height = 1024
+      // Match door aspect ratio: width 2.5, height 4.2
+      canvasRef.current.width = 800
+      canvasRef.current.height = 1344 // 800 * (4.2 / 2.5)
     }
 
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Clear canvas
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // Draw border
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)'
-    ctx.lineWidth = 4
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40)
-
-    // Draw terminal text
-    ctx.fillStyle = '#00FF00'
-    ctx.font = '32px Monaco, Courier New, monospace'
-    ctx.textBaseline = 'top'
-
-    const lineHeight = 50
-    const startY = 60
-
-    terminalLines.forEach((line, index) => {
-      ctx.fillText(line, 40, startY + index * lineHeight)
-    })
-
-    // Create or update texture
-    if (!terminalTextureRef.current) {
-      terminalTextureRef.current = new THREE.CanvasTexture(canvas)
-    } else {
-      terminalTextureRef.current.needsUpdate = true
+    // Create texture on first render
+    if (!terminalTextureRef.current && canvasRef.current) {
+      terminalTextureRef.current = new THREE.CanvasTexture(canvasRef.current)
     }
   }, [terminalLines])
 
@@ -170,6 +144,38 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
     }
     if (rightDoorWireframeRef.current) {
       rightDoorWireframeRef.current.computeLineDistances()
+    }
+
+    // Update terminal texture every frame when there are lines to display
+    if (terminalLines.length > 0) {
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d')
+      if (!canvas || !ctx) return
+
+      // Clear and redraw
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      ctx.fillStyle = '#00FF00'
+      ctx.font = '28px Monaco, Courier New, monospace'
+      ctx.textBaseline = 'top'
+
+      const lineHeight = 45
+      const startY = 40
+
+      terminalLines.forEach((line, index) => {
+        let displayLine = line
+        // Only animate dots if the full "Starting..." line is complete
+        if (line === 'Starting...' || line.startsWith('Starting...')) {
+          const dotCount = (Math.floor(Date.now() / 500) % 4)
+          displayLine = 'Starting' + '.'.repeat(dotCount)
+        }
+        ctx.fillText(displayLine, 40, startY + index * lineHeight)
+      })
+
+      if (terminalTextureRef.current) {
+        terminalTextureRef.current.needsUpdate = true
+      }
     }
 
     // Door animation
@@ -261,7 +267,7 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
         {containerState === 'building' && terminalLines.length > 0 && terminalTextureRef.current && (
           <mesh position={[DOOR.width / 2, 0, DOOR.depth / 2 + 0.01]}>
             <planeGeometry args={[DOOR.width - 0.4, DOOR.height - 0.6]} />
-            <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.FrontSide} />
+            <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.DoubleSide} />
           </mesh>
         )}
       </group>
