@@ -102,17 +102,17 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
   // Door materials - black in building/error (with animated opacity in building), docker blue in running
   const doorMaterial = useMemo(
     () => {
-      let color = CONTAINER_COLORS.WALL_SURFACE;
+      let color: number = CONTAINER_COLORS.WALL_SURFACE;
       let opacity = 1.0;
 
       if (containerState === 'building') {
-        color = 0x000000; // Black for building state
+        color = 0x000000 as number; // Black for building state
         opacity = buildingDoorOpacity;
       } else if (containerState === 'error') {
-        color = 0x000000; // Black for error state
+        color = 0x000000 as number; // Black for error state
         opacity = 1.0; // Doors filled black in error state
       } else if (containerState === 'running') {
-        color = 0x1d63ed; // Docker blue
+        color = 0x1d63ed as number; // Docker blue
       } else if (state === 'open' || containerState === 'ready') {
         opacity = 0.0;
       }

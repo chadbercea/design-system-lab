@@ -68,6 +68,7 @@ function DoorAnimationDemo() {
         {/* Doors */}
         <ContainerDoors
           state={doorState}
+          wireframeMaterial={new THREE.LineBasicMaterial({ color: '#90CAF9', linewidth: 2 })}
           onAnimationComplete={() => {
             setDoorState('closed')
           }}
@@ -196,7 +197,7 @@ export const Open: Story = {
           <meshStandardMaterial color="#263238" metalness={0.7} roughness={0.4} transparent opacity={0.3} />
         </mesh>
 
-        <ContainerDoors state="open" />
+        <ContainerDoors state="open" wireframeMaterial={new THREE.LineBasicMaterial({ color: '#90CAF9', linewidth: 2 })} />
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[20, 20]} />
@@ -230,7 +231,7 @@ export const Closed: Story = {
           <meshStandardMaterial color="#263238" metalness={0.7} roughness={0.4} transparent opacity={0.3} />
         </mesh>
 
-        <ContainerDoors state="closed" />
+        <ContainerDoors state="closed" wireframeMaterial={new THREE.LineBasicMaterial({ color: '#90CAF9', linewidth: 2 })} />
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[20, 20]} />
