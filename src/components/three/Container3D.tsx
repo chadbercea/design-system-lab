@@ -50,6 +50,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   // Terminal text animation state
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [terminalStart, setTerminalStart] = useState<number | null>(null);
+  const [terminalCharCount, setTerminalCharCount] = useState(0);
 
   // Wall material - invisible in building/ready, docker blue in running, white in error
   const wallMaterial = useMemo(() => {
@@ -250,10 +251,10 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         }
       }
 
-      // Terminal text animation - displays lines sequentially after doors close
+      // Terminal text animation - types characters sequentially
       if (terminalStart !== null) {
         const elapsed = (Date.now() - terminalStart) / 1000;
-        const lineDelay = 0.3; // 0.3 seconds between each line
+        const charsPerSecond = 30; // Character typing speed
 
         const allLines = [
           'Loading Dockerfile...',
@@ -265,11 +266,32 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           'Starting...'
         ];
 
-        const visibleLineCount = Math.min(Math.floor(elapsed / lineDelay) + 1, allLines.length);
-        const currentLines = allLines.slice(0, visibleLineCount);
+        // Calculate total characters needed
+        const totalChars = allLines.reduce((sum, line) => sum + line.length, 0);
+        const targetCharCount = Math.min(Math.floor(elapsed * charsPerSecond), totalChars);
 
-        if (currentLines.length !== terminalLines.length) {
-          setTerminalLines(currentLines);
+        // Build visible lines by character count
+        let charsRemaining = targetCharCount;
+        const visibleLines: string[] = [];
+
+        for (const line of allLines) {
+          if (charsRemaining <= 0) break;
+
+          if (charsRemaining >= line.length) {
+            visibleLines.push(line);
+            charsRemaining -= line.length;
+          } else {
+            visibleLines.push(line.substring(0, charsRemaining));
+            charsRemaining = 0;
+          }
+        }
+
+        // Always update if content changed (check entire array)
+        const contentChanged = visibleLines.length !== terminalLines.length ||
+          visibleLines.some((line, idx) => line !== terminalLines[idx]);
+
+        if (contentChanged) {
+          setTerminalLines(visibleLines);
         }
       }
 

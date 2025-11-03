@@ -1,7 +1,6 @@
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { Html } from '@react-three/drei'
 import { CONTAINER_COLORS } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
@@ -67,6 +66,28 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
   const animationStartRef = useRef<number | null>(null)
   const hasCompletedRef = useRef(false)
 
+  // Canvas texture for terminal text
+  const terminalTextureRef = useRef<THREE.CanvasTexture | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  // Create canvas texture for terminal text
+  useEffect(() => {
+    if (terminalLines.length === 0) return
+
+    // Create canvas with aspect ratio matching door (2.5 : 4.2)
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement('canvas')
+      // Match door aspect ratio: width 2.5, height 4.2
+      canvasRef.current.width = 800
+      canvasRef.current.height = 1344 // 800 * (4.2 / 2.5)
+    }
+
+    // Create texture on first render
+    if (!terminalTextureRef.current && canvasRef.current) {
+      terminalTextureRef.current = new THREE.CanvasTexture(canvasRef.current)
+    }
+  }, [terminalLines])
+
   // Reset animation when state changes to closing
   React.useEffect(() => {
     if (state === 'closing') {
@@ -123,6 +144,38 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
     }
     if (rightDoorWireframeRef.current) {
       rightDoorWireframeRef.current.computeLineDistances()
+    }
+
+    // Update terminal texture every frame when there are lines to display
+    if (terminalLines.length > 0) {
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d')
+      if (!canvas || !ctx) return
+
+      // Clear and redraw
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      ctx.fillStyle = '#00FF00'
+      ctx.font = '28px Monaco, Courier New, monospace'
+      ctx.textBaseline = 'top'
+
+      const lineHeight = 45
+      const startY = 40
+
+      terminalLines.forEach((line, index) => {
+        let displayLine = line
+        // Only animate dots if the full "Starting..." line is complete
+        if (line === 'Starting...' || line.startsWith('Starting...')) {
+          const dotCount = (Math.floor(Date.now() / 500) % 4)
+          displayLine = 'Starting' + '.'.repeat(dotCount)
+        }
+        ctx.fillText(displayLine, 40, startY + index * lineHeight)
+      })
+
+      if (terminalTextureRef.current) {
+        terminalTextureRef.current.needsUpdate = true
+      }
     }
 
     // Door animation
@@ -210,37 +263,12 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
           </mesh>
         ))}
 
-        {/* Terminal text on left door surface - only visible when door is visible */}
-        {containerState === 'building' && terminalLines.length > 0 && (
-          <Html
-            position={[DOOR.width / 2, 0.5, DOOR.depth / 2 + 0.01]}
-            transform
-            distanceFactor={2.5}
-            style={{ width: '100%' }}
-          >
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.95)',
-              border: '1px solid rgba(0, 255, 0, 0.5)',
-              borderRadius: '2px',
-              padding: '4px 6px',
-              color: '#00FF00',
-              fontSize: '7px',
-              fontWeight: '500',
-              fontFamily: 'Monaco, Courier New, monospace',
-              lineHeight: '1.3',
-              whiteSpace: 'pre',
-              textAlign: 'left',
-              pointerEvents: 'none',
-              maxWidth: `${DOOR.width * 40}px`,
-              boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)',
-            }}>
-              {terminalLines.map((line, index) => (
-                <div key={index}>
-                  {line}
-                </div>
-              ))}
-            </div>
-          </Html>
+        {/* Terminal text on left door surface - canvas texture */}
+        {containerState === 'building' && terminalLines.length > 0 && terminalTextureRef.current && (
+          <mesh position={[DOOR.width / 2, 0, DOOR.depth / 2 + 0.01]}>
+            <planeGeometry args={[DOOR.width - 0.4, DOOR.height - 0.6]} />
+            <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.DoubleSide} />
+          </mesh>
         )}
       </group>
 
