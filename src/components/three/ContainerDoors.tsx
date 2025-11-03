@@ -110,7 +110,7 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
         opacity = buildingDoorOpacity;
       } else if (containerState === 'error') {
         color = 0x000000; // Black for error state
-        opacity = 0.0; // Doors stay transparent/open in error state
+        opacity = 1.0; // Doors filled black in error state
       } else if (containerState === 'running') {
         color = 0x1d63ed; // Docker blue
       } else if (state === 'open' || containerState === 'ready') {

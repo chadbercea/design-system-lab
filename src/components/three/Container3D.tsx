@@ -52,6 +52,12 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [terminalStart, setTerminalStart] = useState<number | null>(null);
   const [terminalCharCount, setTerminalCharCount] = useState(0);
 
+  // Running state animation
+  const [runningFadeStart, setRunningFadeStart] = useState<number | null>(null);
+
+  // Error state animation
+  const [errorCameraStart, setErrorCameraStart] = useState<number | null>(null);
+
   // Wall material - invisible in building/ready, docker blue in running, white in error
   const wallMaterial = useMemo(() => {
     let color = CONTAINER_COLORS.WALL_SURFACE;
@@ -165,10 +171,24 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('closed');
       setIdleAnimationStart(null);
       dottedWireframeMaterial.opacity = 1.0;
+    } else if (state === 'running') {
+      // Running state: fade from black to blue, auto rotate
+      setUsesDottedMaterial(false);
+      setCrateState('floating');
+      setDoorState('closed');
+      setIdleAnimationStart(null);
+      setRunningFadeStart(Date.now());
+    } else if (state === 'error') {
+      // Error state: camera rotates to door side, doors open with black fill
+      setUsesDottedMaterial(false);
+      setCrateState('floating');
+      setDoorState('open');
+      setIdleAnimationStart(null);
+      setErrorCameraStart(Date.now());
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
-      setDoorState(state === 'error' ? 'open' : 'closed');
+      setDoorState('closed');
       setIdleAnimationStart(null);
     }
   }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
@@ -296,6 +316,51 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       }
 
       // No idle animations after choreography completes
+    } else if (state === 'running') {
+      // Running state: slow auto-rotation
+      if (containerRef.current) {
+        containerRef.current.rotation.y = elapsed * 0.1; // Slow rotation
+        containerRef.current.scale.setScalar(1.0);
+      }
+
+      // Fade COLOR from black to blue
+      if (runningFadeStart !== null) {
+        const fadeElapsed = (Date.now() - runningFadeStart) / 1000;
+        const fadeDuration = 2.0; // 2 seconds fade
+        const fadeProgress = Math.min(fadeElapsed / fadeDuration, 1.0);
+
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - fadeProgress, 3);
+
+        // Interpolate color from black (0x000000) to blue (0x1d63ed)
+        const blackR = 0, blackG = 0, blackB = 0;
+        const blueR = 0x1d, blueG = 0x63, blueB = 0xed;
+
+        const r = Math.round(blackR + (blueR - blackR) * eased);
+        const g = Math.round(blackG + (blueG - blackG) * eased);
+        const b = Math.round(blackB + (blueB - blackB) * eased);
+
+        wallMaterial.color.setHex((r << 16) | (g << 8) | b);
+        wallMaterial.opacity = 1.0; // Keep fully opaque
+        wallMaterial.needsUpdate = true;
+      }
+    } else if (state === 'error') {
+      // Error state: rotate container to show door side
+      if (containerRef.current && errorCameraStart !== null) {
+        const cameraElapsed = (Date.now() - errorCameraStart) / 1000;
+        const cameraDuration = 1.5; // 1.5 seconds
+        const cameraProgress = Math.min(cameraElapsed / cameraDuration, 1.0);
+
+        // Ease in-out cubic
+        const eased = cameraProgress < 0.5
+          ? 4 * cameraProgress * cameraProgress * cameraProgress
+          : 1 - Math.pow(-2 * cameraProgress + 2, 3) / 2;
+
+        // Rotate container 45 degrees to show doors from side angle
+        const targetAngle = Math.PI / 4; // 45 degrees
+        containerRef.current.rotation.y = targetAngle * eased;
+        containerRef.current.scale.setScalar(1.0);
+      }
     } else {
       if (containerRef.current) {
         containerRef.current.rotation.y = 0;
@@ -472,11 +537,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         </Html>
       )}
 
-      {/* Ground plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.2} />
-      </mesh>
+      {/* Ground plane - hidden */}
     </group>
   );
 }
