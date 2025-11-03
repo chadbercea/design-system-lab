@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.3",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
@@ -25,8 +26,10 @@
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-resizable-panels": "^3.0.6",
     "tailwind-merge": "^3.3.1",
-    "three": "^0.181.0"
+    "three": "^0.181.0",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.14",
