@@ -43,6 +43,10 @@ export function ContainerScene({
           near: 0.1,
           far: 1000,
         }}
+        gl={{ alpha: false }}
+        onCreated={({ gl, scene }) => {
+          gl.setClearColor('#000000', 1);
+        }}
       >
         {/* Ambient light - base fill */}
         <ambientLight color="#404040" intensity={0.4} />
