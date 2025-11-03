@@ -26,46 +26,90 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionStart, setTransitionStart] = useState<number | null>(null);
   const [hasTransitioned, setHasTransitioned] = useState(false);
-  const [doorState, setDoorState] = useState<'open' | 'closing' | 'closed'>(state === 'building' ? 'open' : 'closed');
+  const [doorState, setDoorState] = useState<'open' | 'closing' | 'closed'>(
+    state === 'building' ? 'open' : state === 'error' ? 'open' : 'closed'
+  );
   const [idleAnimationStart, setIdleAnimationStart] = useState<number | null>(null);
 
-  // Create opaque dark blue-grey wall material (using MeshBasicMaterial so it doesn't need lights)
-  const wallMaterial = useMemo(() =>
-    new THREE.MeshBasicMaterial({
-      color: CONTAINER_COLORS.WALL_SURFACE,
-      side: THREE.DoubleSide,
-    }), []
-  );
+  // Wall fade animation for building state
+  const [wallFadeStart, setWallFadeStart] = useState<number | null>(null);
+  const [wallOpacities, setWallOpacities] = useState({
+    back: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    doors: 0,
+  });
+  const [doorCloseTriggered, setDoorCloseTriggered] = useState(false);
 
-  // Create bright solid wireframe material (using brighter color for visibility)
-  const solidWireframeMaterial = useMemo(() =>
-    new THREE.LineBasicMaterial({
-      color: 0x90CAF9, // Much brighter blue for visibility
+  // Camera rotation state for building sequence
+  const [cameraRotationStart, setCameraRotationStart] = useState<number | null>(null);
+  const [cameraRotationComplete, setCameraRotationComplete] = useState(false);
+
+  // Terminal text animation state
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [terminalStart, setTerminalStart] = useState<number | null>(null);
+
+  // Wall material - invisible in building/ready, docker blue in running, white in error
+  const wallMaterial = useMemo(() => {
+    let color = CONTAINER_COLORS.WALL_SURFACE;
+    if (state === 'running') {
+      color = 0x1d63ed; // Docker blue
+    }
+
+    return new THREE.MeshBasicMaterial({
+      color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: (state === 'building' || state === 'ready') ? 0.0 : 1.0,
+      depthWrite: false,
+      colorWrite: state !== 'building' && state !== 'ready',
+    });
+  }, [state]);
+
+  // Create solid wireframe material - WHITE for all states
+  const solidWireframeMaterial = useMemo(() => {
+    return new THREE.LineBasicMaterial({
+      color: 0xFFFFFF,
       linewidth: 3,
       transparent: false,
       opacity: 1.0,
-      depthTest: false,
-      depthWrite: false,
-    }), []
-  );
+      depthTest: true,
+      depthWrite: true,
+    });
+  }, []);
 
-  // Create dotted wireframe material
-  const dottedWireframeMaterial = useMemo(() =>
-    new THREE.LineDashedMaterial({
-      color: 0x90CAF9, // Same bright blue
-      linewidth: 2,
+  // Create dotted wireframe material - MUST use LineDashedMaterial for dashes
+  const dottedWireframeMaterial = useMemo(() => {
+    const mat = new THREE.LineDashedMaterial({
+      color: 0xFFFFFF,
+      linewidth: 3,
       scale: 1,
-      dashSize: 0.3,
-      gapSize: 0.2,
-      transparent: true,
-      opacity: 0.7,
-      depthTest: false,
-      depthWrite: false,
-    }), []
-  );
+      dashSize: 0.75,
+      gapSize: 0.75,
+      transparent: false,
+      opacity: 1.0,
+      depthTest: true,
+      depthWrite: true,
+    });
+    return mat;
+  }, []);
 
-  // Current wireframe material
-  const currentWireframeMaterial = usesDottedMaterial ? dottedWireframeMaterial : solidWireframeMaterial;
+  // Red wireframe material for error state
+  const redWireframeMaterial = useMemo(() => {
+    return new THREE.LineBasicMaterial({
+      color: 0xff0000, // Red
+      linewidth: 3,
+      transparent: false,
+      opacity: 1.0,
+      depthTest: true,
+      depthWrite: true,
+    });
+  }, []);
+
+  // Current wireframe material - red for error, white dashed for building, white solid for others
+  const currentWireframeMaterial = state === 'error' ? redWireframeMaterial : (usesDottedMaterial ? dottedWireframeMaterial : solidWireframeMaterial);
 
   // Building state glow material
   const glowMaterial = useMemo(() => {
@@ -80,15 +124,12 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
     });
   }, [state]);
 
-  // Compute line distances for dashed material
-  useEffect(() => {
+  // Compute line distances for dashed material - must be called every frame
+  useFrame(() => {
     if (wireframeRef.current && usesDottedMaterial) {
-      const geom = wireframeRef.current.geometry;
-      if (geom instanceof THREE.BufferGeometry && 'computeLineDistances' in geom) {
-        (geom as any).computeLineDistances();
-      }
+      wireframeRef.current.computeLineDistances();
     }
-  }, [usesDottedMaterial]);
+  });
 
   // Reset state when switching to building
   useEffect(() => {
@@ -99,13 +140,34 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setCrateState('entering');
       setDoorState('open');
       setIdleAnimationStart(null);
+      setWallFadeStart(null);
+      setWallOpacities({
+        back: 0,
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        doors: 0,
+      });
+      setDoorCloseTriggered(false);
+      setTerminalLines([]);
+      setTerminalStart(null);
+      setCameraRotationStart(null);
+      setCameraRotationComplete(false);
       dottedWireframeMaterial.opacity = 0.7;
       solidWireframeMaterial.opacity = 1.0;
       solidWireframeMaterial.transparent = false;
+    } else if (state === 'ready') {
+      // Ready state: same as building but doors closed
+      setUsesDottedMaterial(true);
+      setCrateState('idle');
+      setDoorState('closed');
+      setIdleAnimationStart(null);
+      dottedWireframeMaterial.opacity = 1.0;
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
-      setDoorState('closed');
+      setDoorState(state === 'error' ? 'open' : 'closed');
       setIdleAnimationStart(null);
     }
   }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
@@ -116,15 +178,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
     // Building state animations
     if (state === 'building') {
-      // Rotation
-      if (containerRef.current) {
-        containerRef.current.rotation.y = elapsed * 0.2;
-      }
-
-      // Pulsing glow
-      if (glowMeshRef.current && glowMeshRef.current.material instanceof THREE.MeshBasicMaterial) {
-        glowMeshRef.current.material.opacity = getBuildingPulseOpacity(elapsed);
-      }
+      // No container rotation in building state - camera should handle positioning
 
       // Marching ants
       if (wireframeRef.current && usesDottedMaterial) {
@@ -134,43 +188,92 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         }
       }
 
-      // Idle state animation after choreography completes
-      // (when crate is floating and transition is done)
-      if (crateState === 'floating' && !isTransitioning && hasTransitioned) {
-        // Start idle animation timer on first frame after transition
-        if (idleAnimationStart === null) {
-          setIdleAnimationStart(Date.now());
-        }
+      // Sequential wall fade-in animation
+      if (wallFadeStart !== null) {
+        const elapsed = (Date.now() - wallFadeStart) / 1000;
+        const fadeDuration = 0.6; // Each wall fades in over 0.6 seconds
+        const delayBetween = 0.2; // 0.2 second delay between each wall
 
-        if (idleAnimationStart !== null) {
-          const idleElapsed = (Date.now() - idleAnimationStart) / 1000;
+        // Back wall (starts immediately)
+        const backProgress = Math.min(Math.max((elapsed - 0) / fadeDuration, 0), 1);
+        // Left wall (starts after back + delay)
+        const leftProgress = Math.min(Math.max((elapsed - (fadeDuration + delayBetween)) / fadeDuration, 0), 1);
+        // Right wall (starts after left + delay)
+        const rightProgress = Math.min(Math.max((elapsed - (fadeDuration + delayBetween) * 2) / fadeDuration, 0), 1);
+        // Top wall (starts after right + delay)
+        const topProgress = Math.min(Math.max((elapsed - (fadeDuration + delayBetween) * 3) / fadeDuration, 0), 1);
+        // Bottom wall (starts after top + delay)
+        const bottomProgress = Math.min(Math.max((elapsed - (fadeDuration + delayBetween) * 4) / fadeDuration, 0), 1);
+        // Doors (starts after bottom + delay)
+        const doorsProgress = Math.min(Math.max((elapsed - (fadeDuration + delayBetween) * 5) / fadeDuration, 0), 1);
 
-          // Subtle breathing motion (scale pulse)
-          // 4-second cycle: 1.0 → 1.02 → 1.0
-          const breatheCycle = Math.sin(idleElapsed * (Math.PI / 2)) * 0.01 + 1.01; // Range: 1.0 to 1.02
-          if (containerRef.current) {
-            containerRef.current.scale.setScalar(breatheCycle);
-          }
+        setWallOpacities({
+          back: backProgress,
+          left: leftProgress,
+          right: rightProgress,
+          top: topProgress,
+          bottom: bottomProgress,
+          doors: doorsProgress,
+        });
 
-          // Subtle glow pulse on edges
-          // Make the solid wireframe material pulse gently
-          if (wireframeRef.current && !usesDottedMaterial) {
-            const material = wireframeRef.current.material as THREE.LineBasicMaterial;
-            if (material && 'opacity' in material) {
-              // Pulse between 0.8 and 1.0 opacity over 3 seconds
-              const glowPulse = 0.9 + Math.sin(idleElapsed * (Math.PI * 2 / 3)) * 0.1;
-              material.opacity = glowPulse;
-              material.transparent = true;
-              material.needsUpdate = true;
-            }
-          }
-        }
-      } else {
-        // Reset scale when not in idle state
-        if (containerRef.current && crateState !== 'floating') {
-          containerRef.current.scale.setScalar(1.0);
+        // After doors are fully visible, start door closing (once)
+        if (doorsProgress >= 1 && !isTransitioning && !doorCloseTriggered) {
+          setDoorState('closing');
+          setIsTransitioning(true);
+          setTransitionStart(Date.now());
+          setDoorCloseTriggered(true);
         }
       }
+
+      // Camera rotation starts after doors close
+      if (doorState === 'closed' && !cameraRotationComplete && cameraRotationStart === null) {
+        setCameraRotationStart(Date.now());
+      }
+
+      if (cameraRotationStart !== null && !cameraRotationComplete) {
+        const elapsed = (Date.now() - cameraRotationStart) / 1000;
+        const rotationDuration = 1.0; // 1 second rotation
+        const progress = Math.min(elapsed / rotationDuration, 1.0);
+
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        // Rotate container to the RIGHT to show right side panel (negative rotation)
+        // -45 degrees to show the RIGHT side from outside
+        const targetRotation = -(Math.PI / 4);
+        if (containerRef.current) {
+          containerRef.current.rotation.y = eased * targetRotation;
+        }
+
+        if (progress >= 1.0 && !cameraRotationComplete) {
+          setCameraRotationComplete(true);
+        }
+      }
+
+      // Terminal text animation - displays lines sequentially after doors close
+      if (terminalStart !== null) {
+        const elapsed = (Date.now() - terminalStart) / 1000;
+        const lineDelay = 0.3; // 0.3 seconds between each line
+
+        const allLines = [
+          'Loading Dockerfile...',
+          'Step 1/5: FROM nginx:alpine',
+          'Step 2/5: COPY . /usr/share/nginx/html',
+          'Step 3/5: EXPOSE 80',
+          'Step 4/5: CMD ["nginx", "-g", "daemon off;"]',
+          'Step 5/5: Successfully built container',
+          'Starting...'
+        ];
+
+        const visibleLineCount = Math.min(Math.floor(elapsed / lineDelay) + 1, allLines.length);
+        const currentLines = allLines.slice(0, visibleLineCount);
+
+        if (currentLines.length !== terminalLines.length) {
+          setTerminalLines(currentLines);
+        }
+      }
+
+      // No idle animations after choreography completes
     } else {
       if (containerRef.current) {
         containerRef.current.rotation.y = 0;
@@ -178,7 +281,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       }
     }
 
-    // Handle wireframe transition
+    // Handle wireframe transition - gaps fill in, walls become opaque
     if (isTransitioning && transitionStart !== null) {
       const elapsed = (Date.now() - transitionStart) / 1000;
       const progress = Math.min(elapsed / 1.0, 1.0);
@@ -187,12 +290,13 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         ? 4 * progress * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-      dottedWireframeMaterial.opacity = 0.7 * (1 - eased);
-      solidWireframeMaterial.opacity = eased;
-      solidWireframeMaterial.transparent = progress < 1.0;
-
+      // Animate gap size from 0.8 to 0 (gaps close)
+      dottedWireframeMaterial.gapSize = 0.8 * (1 - eased);
       dottedWireframeMaterial.needsUpdate = true;
-      solidWireframeMaterial.needsUpdate = true;
+
+      // Animate wall opacity from 0 to 1
+      wallMaterial.opacity = eased;
+      wallMaterial.needsUpdate = true;
 
       if (progress >= 0.5 && usesDottedMaterial) {
         setUsesDottedMaterial(false);
@@ -200,23 +304,83 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
       if (progress >= 1.0) {
         setIsTransitioning(false);
-        solidWireframeMaterial.opacity = 1.0;
-        solidWireframeMaterial.transparent = false;
-        solidWireframeMaterial.needsUpdate = true;
+        wallMaterial.opacity = 1.0;
+        wallMaterial.needsUpdate = true;
       }
     }
   });
 
   return (
     <group ref={containerRef}>
-      {/* Container box (single mesh with DoubleSide) */}
-      <mesh position={[0, 2.5, 0]}>
-        <boxGeometry args={[6, 5, 8]} />
-        <primitive object={wallMaterial} attach="material" />
-      </mesh>
+      {/* Container box - render in running state, hide front face in error state */}
+      {state === 'running' && (
+        <mesh position={[0, 2.5, 0]}>
+          <boxGeometry args={[6, 5, 8]} />
+          <primitive object={wallMaterial} attach="material" />
+        </mesh>
+      )}
+      {state === 'building' && (
+        <>
+          {/* Back wall - fades in first */}
+          <mesh position={[0, 2.5, -4]} renderOrder={1}>
+            <planeGeometry args={[6, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={wallOpacities.back} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Left wall */}
+          <mesh position={[-3, 2.5, 0]} rotation={[0, Math.PI / 2, 0]} renderOrder={1}>
+            <planeGeometry args={[8, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={wallOpacities.left} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Right wall */}
+          <mesh position={[3, 2.5, 0]} rotation={[0, -Math.PI / 2, 0]} renderOrder={1}>
+            <planeGeometry args={[8, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={wallOpacities.right} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Top wall */}
+          <mesh position={[0, 5, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+            <planeGeometry args={[6, 8]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={wallOpacities.top} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Bottom wall */}
+          <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={1}>
+            <planeGeometry args={[6, 8]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={wallOpacities.bottom} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+        </>
+      )}
+      {state === 'error' && (
+        <>
+          {/* Back wall */}
+          <mesh position={[0, 2.5, -4]} renderOrder={1}>
+            <planeGeometry args={[6, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={1.0} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Left wall */}
+          <mesh position={[-3, 2.5, 0]} rotation={[0, Math.PI / 2, 0]} renderOrder={1}>
+            <planeGeometry args={[8, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={1.0} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Right wall */}
+          <mesh position={[3, 2.5, 0]} rotation={[0, -Math.PI / 2, 0]} renderOrder={1}>
+            <planeGeometry args={[8, 5]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={1.0} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Top wall */}
+          <mesh position={[0, 5, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+            <planeGeometry args={[6, 8]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={1.0} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+          {/* Bottom wall */}
+          <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={1}>
+            <planeGeometry args={[6, 8]} />
+            <meshBasicMaterial color={0x000000} transparent opacity={1.0} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+        </>
+      )}
 
-      {/* Wireframe edges */}
+      {/* Wireframe edges - force re-render when material changes */}
       <lineSegments
+        key={usesDottedMaterial ? 'dotted' : 'solid'}
         ref={wireframeRef}
         position={[0, 2.5, 0]}
         renderOrder={999}
@@ -225,28 +389,30 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         <primitive object={currentWireframeMaterial} attach="material" />
       </lineSegments>
 
-      {/* Building state glow */}
-      {state === 'building' && glowMaterial && (
-        <mesh ref={glowMeshRef} position={[0, 2.5, 0]} scale={[1.02, 1.02, 1.02]}>
-          <boxGeometry args={[6, 5, 8]} />
-          <primitive object={glowMaterial} attach="material" />
-        </mesh>
-      )}
+      {/* No glow effect in building state */}
 
       {/* Container doors */}
       <ContainerDoors
         state={doorState}
+        containerState={state}
+        wireframeMaterial={currentWireframeMaterial}
+        buildingDoorOpacity={wallOpacities.doors}
+        terminalLines={terminalLines}
         onAnimationComplete={() => {
           setDoorState('closed');
+          // Start terminal text when doors finish closing
+          if (state === 'building' && terminalStart === null) {
+            setTerminalStart(Date.now());
+          }
         }}
       />
 
-      {/* Image crate - only visible in building state */}
-      {state === 'building' && (
+      {/* Image crate - visible in building and error states */}
+      {(state === 'building' || state === 'error') && (
         <ImageCrateModel
           state={crateState}
           showLogo={true}
-          scale={1.5}
+          scale={1.0}
           imageName="nginx:latest"
           showLoadingText={true}
           onAnimationComplete={(newState) => {
@@ -255,10 +421,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
               // After entering completes, start docking
               setCrateState('docking');
             } else if (newState === 'settled' && usesDottedMaterial && !hasTransitioned) {
-              // After docking completes and settles, start door closing and wireframe transition
-              setDoorState('closing');
-              setIsTransitioning(true);
-              setTransitionStart(Date.now());
+              // After docking completes and settles, start wall fade-in, then door closing
+              setWallFadeStart(Date.now());
               setHasTransitioned(true);
               setCrateState('floating');
             }

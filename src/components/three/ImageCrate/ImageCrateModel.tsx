@@ -16,9 +16,10 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { useImageCrateAnimation } from './useImageCrateAnimation';
 import type { ImageCrateProps } from './types';
 
@@ -33,21 +34,17 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
   showLoadingText = false,
 }) => {
   const groupRef = useImageCrateAnimation(state, onAnimationComplete);
+  const wireframeRef = useRef<THREE.LineSegments>(null);
 
   // Show loading text during entering and docking states
   const shouldShowText = showLoadingText && (state === 'entering' || state === 'docking');
 
-  // Create main crate material with gradient effect
+  // Create main crate material - Docker blue
   const crateMaterial = useMemo(() => {
-    const baseColor = new THREE.Color(color);
-
-    return new THREE.MeshStandardMaterial({
-      color: baseColor,
-      roughness: 0.4, // Matte finish as specified
-      metalness: 0.1, // Low metalness for painted surface
-      flatShading: false,
+    return new THREE.MeshBasicMaterial({
+      color: 0x1d63ed, // Docker blue - always visible
     });
-  }, [color]);
+  }, []);
 
   // Create logo material (Docker whale on front face)
   const logoMaterial = useMemo(() => {
@@ -60,17 +57,12 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
     });
   }, []);
 
-  // Create edge material for rounded corners
+  // Create edge material for rounded corners - Docker blue (darker)
   const edgeMaterial = useMemo(() => {
-    const baseColor = new THREE.Color(color);
-    const darkerColor = baseColor.clone().multiplyScalar(0.8); // Slightly darker for edges
-
-    return new THREE.MeshStandardMaterial({
-      color: darkerColor,
-      roughness: 0.4,
-      metalness: 0.1,
+    return new THREE.MeshBasicMaterial({
+      color: 0x1850c0,
     });
-  }, [color]);
+  }, []);
 
   // Glow effect material (optional)
   const glowMaterial = useMemo(() => {
@@ -86,41 +78,53 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
     });
   }, [enableGlow, color]);
 
+  // White solid wireframe material for crate
+  const wireframeMaterial = useMemo(() => {
+    return new THREE.LineBasicMaterial({
+      color: 0xFFFFFF,
+      linewidth: 3,
+      transparent: false,
+      opacity: 1.0,
+      depthTest: false,
+      depthWrite: false,
+    });
+  }, []);
+
   return (
     <group ref={groupRef} scale={scale}>
-      {/* Main crate body - Rounded rectangular prism (golden ratio) */}
+      {/* Main crate body - Rounded rectangular prism (50% of container interior) */}
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[1.3, 0.8, 0.8]} />
+        <boxGeometry args={[3.0, 2.5, 4.0]} />
         <primitive object={crateMaterial} attach="material" />
       </mesh>
 
       {/* Rounded corner edges - Front-left vertical */}
-      <mesh position={[-0.65, 0, 0.4]} castShadow>
-        <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+      <mesh position={[-1.5, 0, 2.0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.1, 2.5, 8]} />
         <primitive object={edgeMaterial} attach="material" />
       </mesh>
 
       {/* Rounded corner edges - Front-right vertical */}
-      <mesh position={[0.65, 0, 0.4]} castShadow>
-        <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+      <mesh position={[1.5, 0, 2.0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.1, 2.5, 8]} />
         <primitive object={edgeMaterial} attach="material" />
       </mesh>
 
       {/* Rounded corner edges - Back-left vertical */}
-      <mesh position={[-0.65, 0, -0.4]} castShadow>
-        <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+      <mesh position={[-1.5, 0, -2.0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.1, 2.5, 8]} />
         <primitive object={edgeMaterial} attach="material" />
       </mesh>
 
       {/* Rounded corner edges - Back-right vertical */}
-      <mesh position={[0.65, 0, -0.4]} castShadow>
-        <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+      <mesh position={[1.5, 0, -2.0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.1, 2.5, 8]} />
         <primitive object={edgeMaterial} attach="material" />
       </mesh>
 
       {/* Docker logo on front face (simplified whale shape) */}
       {showLogo && (
-        <group position={[0, 0, 0.41]}>
+        <group position={[0, 0, 2.01]} scale={3.0}>
           {/* Logo background plane */}
           <mesh castShadow>
             <planeGeometry args={[0.65, 0.48]} />
@@ -175,10 +179,10 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
         </mesh>
       )}
 
-      {/* Edge highlight wireframe */}
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(1.3, 0.8, 0.8)]} />
-        <lineBasicMaterial color="#4dc9f0" opacity={0.4} transparent />
+      {/* Edge highlight wireframe - WHITE DASHED */}
+      <lineSegments ref={wireframeRef}>
+        <edgesGeometry args={[new THREE.BoxGeometry(3.0, 2.5, 4.0)]} />
+        <primitive object={wireframeMaterial} attach="material" />
       </lineSegments>
 
       {/* Loading text overlay */}
