@@ -1,7 +1,6 @@
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { Html } from '@react-three/drei'
 import { CONTAINER_COLORS } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
@@ -66,6 +65,54 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
   const rightDoorWireframeRef = useRef<THREE.LineSegments>(null)
   const animationStartRef = useRef<number | null>(null)
   const hasCompletedRef = useRef(false)
+
+  // Canvas texture for terminal text
+  const terminalTextureRef = useRef<THREE.CanvasTexture | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  // Create and update canvas texture for terminal text
+  useEffect(() => {
+    if (terminalLines.length === 0) return
+
+    // Create canvas if it doesn't exist
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement('canvas')
+      canvasRef.current.width = 1024
+      canvasRef.current.height = 1024
+    }
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Clear canvas
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // Draw border
+    ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)'
+    ctx.lineWidth = 4
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40)
+
+    // Draw terminal text
+    ctx.fillStyle = '#00FF00'
+    ctx.font = '32px Monaco, Courier New, monospace'
+    ctx.textBaseline = 'top'
+
+    const lineHeight = 50
+    const startY = 60
+
+    terminalLines.forEach((line, index) => {
+      ctx.fillText(line, 40, startY + index * lineHeight)
+    })
+
+    // Create or update texture
+    if (!terminalTextureRef.current) {
+      terminalTextureRef.current = new THREE.CanvasTexture(canvas)
+    } else {
+      terminalTextureRef.current.needsUpdate = true
+    }
+  }, [terminalLines])
 
   // Reset animation when state changes to closing
   React.useEffect(() => {
@@ -210,37 +257,12 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
           </mesh>
         ))}
 
-        {/* Terminal text on left door surface - only visible when door is visible */}
-        {containerState === 'building' && terminalLines.length > 0 && (
-          <Html
-            position={[DOOR.width / 2, 0.5, DOOR.depth / 2 + 0.01]}
-            transform
-            distanceFactor={2.5}
-            style={{ width: '100%' }}
-          >
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.95)',
-              border: '1px solid rgba(0, 255, 0, 0.5)',
-              borderRadius: '2px',
-              padding: '4px 6px',
-              color: '#00FF00',
-              fontSize: '7px',
-              fontWeight: '500',
-              fontFamily: 'Monaco, Courier New, monospace',
-              lineHeight: '1.3',
-              whiteSpace: 'pre',
-              textAlign: 'left',
-              pointerEvents: 'none',
-              maxWidth: `${DOOR.width * 40}px`,
-              boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)',
-            }}>
-              {terminalLines.map((line, index) => (
-                <div key={index}>
-                  {line}
-                </div>
-              ))}
-            </div>
-          </Html>
+        {/* Terminal text on left door surface - canvas texture */}
+        {containerState === 'building' && terminalLines.length > 0 && terminalTextureRef.current && (
+          <mesh position={[DOOR.width / 2, 0, DOOR.depth / 2 + 0.01]}>
+            <planeGeometry args={[DOOR.width - 0.4, DOOR.height - 0.6]} />
+            <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.FrontSide} />
+          </mesh>
         )}
       </group>
 
