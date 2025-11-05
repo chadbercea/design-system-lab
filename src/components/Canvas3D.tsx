@@ -67,14 +67,18 @@ export function Canvas3D() {
           {/* Container 3D visualization */}
           <Container3D state={containerState} />
 
-          {/* Controls - only enable rotation for ready state */}
+          {/* OrbitControls - always enabled, independent of container animations */}
           <OrbitControls
+            enableDamping
+            dampingFactor={0.05}
+            rotateSpeed={0.8}
+            zoomSpeed={0.8}
             enablePan={false}
-            enableZoom={true}
-            enableRotate={containerState === 'ready'}
-            minDistance={10}
+            minDistance={5}
             maxDistance={30}
+            minPolarAngle={0}
             maxPolarAngle={Math.PI / 2}
+            target={[0, 2.5, 0]}
           />
         </Canvas>
       </Suspense>
