@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/app-state-context';
 import { DockerImage } from '@/types/docker';
+import { fetchImages } from '@/lib/mock-docker-api';
+import { SAMPLE_IMAGE } from '@/lib/fixtures/docker-images';
 import {
   Dialog,
   DialogContent,
@@ -18,50 +20,33 @@ interface ImageSelectorModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Mock Docker Hub images for initial prototype
-const mockImages: DockerImage[] = [
-  {
-    id: '1',
-    name: 'nginx',
-    tag: 'latest',
-    repository: 'library/nginx',
-    size: 142000000,
-  },
-  {
-    id: '2',
-    name: 'node',
-    tag: '20-alpine',
-    repository: 'library/node',
-    size: 178000000,
-  },
-  {
-    id: '3',
-    name: 'postgres',
-    tag: '16',
-    repository: 'library/postgres',
-    size: 432000000,
-  },
-  {
-    id: '4',
-    name: 'redis',
-    tag: 'alpine',
-    repository: 'library/redis',
-    size: 32000000,
-  },
-];
-
-// Sample image for new users
-const sampleImage: DockerImage = {
-  id: 'sample',
-  name: 'hello-world',
-  tag: 'latest',
-  repository: 'library/hello-world',
-  size: 13300000,
-};
-
 export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalProps) {
   const { setSelectedImage } = useAppState();
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [images, setImages] = useState<DockerImage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch images when modal opens
+  useEffect(() => {
+    if (open) {
+      loadImages();
+    }
+  }, [open]);
+
+  const loadImages = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedImages = await fetchImages();
+      // Filter out sample image from list (shown separately)
+      setImages(fetchedImages.filter(img => img.id !== SAMPLE_IMAGE.id));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleImageSelect = (image: DockerImage) => {
     setSelectedImageId(image.id);
@@ -69,9 +54,9 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
 
   const handleConfirm = () => {
     const selectedImage =
-      selectedImageId === 'sample'
-        ? sampleImage
-        : mockImages.find(img => img.id === selectedImageId);
+      selectedImageId === SAMPLE_IMAGE.id
+        ? SAMPLE_IMAGE
+        : images.find(img => img.id === selectedImageId);
 
     if (selectedImage) {
       setSelectedImage(selectedImage);
@@ -80,7 +65,7 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
   };
 
   const handleUseSample = () => {
-    setSelectedImage(sampleImage);
+    setSelectedImage(SAMPLE_IMAGE);
     onOpenChange(false);
   };
 
@@ -138,7 +123,17 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
 
           {/* Image List */}
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {mockImages.map((image) => (
+            {loading && (
+              <div className="text-center py-8 text-zinc-400">
+                Loading images...
+              </div>
+            )}
+            {error && (
+              <div className="text-center py-8 text-red-400">
+                Error: {error}
+              </div>
+            )}
+            {!loading && !error && images.map((image) => (
               <button
                 key={image.id}
                 onClick={() => handleImageSelect(image)}

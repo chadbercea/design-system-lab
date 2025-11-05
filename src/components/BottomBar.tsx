@@ -1,16 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/app-state-context';
 import { Badge } from '@/components/ui/badge';
+import { createStatsStream } from '@/lib/mock-docker-api';
+import { ContainerStats } from '@/types/docker';
 
 export function BottomBar() {
   const { containerStatus, config } = useAppState();
+  const [stats, setStats] = useState<ContainerStats | null>(null);
 
-  // Mock stats for now (will be replaced with real data later)
-  const cpuPercent = 23.5;
-  const memoryUsageMB = 256;
-  const memoryLimitMB = 1024;
-  const memoryPercent = (memoryUsageMB / memoryLimitMB) * 100;
+  // Stream real-time stats when container is running
+  useEffect(() => {
+    if (containerStatus === 'running' || containerStatus === 'building') {
+      const cleanup = createStatsStream('mock-container-id', containerStatus, setStats);
+      return cleanup;
+    } else {
+      setStats(null);
+    }
+  }, [containerStatus]);
+
+  const cpuPercent = stats?.cpuPercent || 0;
+  const memoryUsageMB = stats ? Math.round(stats.memoryUsage / (1024 * 1024)) : 0;
+  const memoryLimitMB = stats ? Math.round(stats.memoryLimit / (1024 * 1024)) : 1024;
+  const memoryPercent = stats ? (stats.memoryUsage / stats.memoryLimit) * 100 : 0;
 
   // Get localhost URL from config or use default
   const defaultPort = 6001;
