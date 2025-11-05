@@ -58,11 +58,11 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   // Error state animation
   const [errorCameraStart, setErrorCameraStart] = useState<number | null>(null);
 
-  // Wall material - invisible in building/ready, docker blue in running, white in error
+  // Wall material - invisible in building/ready, dark navy in running, white in error
   const wallMaterial = useMemo(() => {
     let color: number = CONTAINER_COLORS.WALL_SURFACE;
     if (state === 'running') {
-      color = 0x1d63ed as number; // Docker blue
+      color = 0x1a2845 as number; // Dark navy blue
     }
 
     return new THREE.MeshBasicMaterial({
@@ -332,9 +332,9 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         // Ease out cubic
         const eased = 1 - Math.pow(1 - fadeProgress, 3);
 
-        // Interpolate color from black (0x000000) to blue (0x1d63ed)
+        // Interpolate color from black (0x000000) to dark navy (0x1a2845)
         const blackR = 0, blackG = 0, blackB = 0;
-        const blueR = 0x1d, blueG = 0x63, blueB = 0xed;
+        const blueR = 0x1a, blueG = 0x28, blueB = 0x45;
 
         const r = Math.round(blackR + (blueR - blackR) * eased);
         const g = Math.round(blackG + (blueG - blackG) * eased);
