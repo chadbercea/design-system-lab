@@ -30,52 +30,80 @@ function FallbackLoader() {
 }
 
 /**
- * CameraController - Smoothly resets camera position on state transitions
- * Animates camera back to default position: [8, 6, 12] before each state change
+ * CameraController - Choreographs camera position for building sequence
+ *
+ * Camera positions for each phase:
+ * - default: Free roam, no constraints (ready state)
+ * - buildStart: 45° angle off left door to see crate entering
+ * - doorsClosing: Front view of doors to see them closing
+ * - terminal: Hold front view to see terminal text on left door
+ * - runningRotate: 45° angle off right side for running state
  */
-function CameraController({ containerState }: { containerState: string }) {
+function CameraController({ cameraPhase }: { cameraPhase: string }) {
   const controlsRef = useRef<OrbitControlsType | null>(null);
   const { camera } = useThree();
-  const prevStateRef = useRef<string>(containerState);
-  const isResettingRef = useRef(false);
-  const resetStartTimeRef = useRef<number | null>(null);
+  const prevPhaseRef = useRef<string>(cameraPhase);
+  const isAnimatingRef = useRef(false);
+  const animStartTimeRef = useRef<number | null>(null);
   const startPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const targetPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Default camera position
-  const defaultPosition = new THREE.Vector3(8, 6, 12);
-  const resetDuration = 0.8; // 800ms smooth animation
+  const animDuration = 1.2; // 1.2 second camera movements
+
+  // Define camera positions for each choreography phase
+  const getCameraPosition = (phase: string): THREE.Vector3 => {
+    switch (phase) {
+      case 'buildStart':
+        // 45° angle off left door - looking at left side/front
+        return new THREE.Vector3(-8, 6, 10);
+      case 'doorsClosing':
+      case 'terminal':
+        // Front view of doors - centered
+        return new THREE.Vector3(0, 6, 14);
+      case 'runningRotate':
+        // 45° angle off right side
+        return new THREE.Vector3(8, 6, 10);
+      case 'default':
+      default:
+        // Default starting position
+        return new THREE.Vector3(8, 6, 12);
+    }
+  };
 
   useFrame(() => {
-    // Detect state transition
-    if (containerState !== prevStateRef.current) {
-      // State changed - start camera reset
-      isResettingRef.current = true;
-      resetStartTimeRef.current = Date.now();
+    // Detect phase change
+    if (cameraPhase !== prevPhaseRef.current) {
+      // Phase changed - start camera animation
+      isAnimatingRef.current = true;
+      animStartTimeRef.current = Date.now();
       startPositionRef.current.copy(camera.position);
-      prevStateRef.current = containerState;
+      targetPositionRef.current.copy(getCameraPosition(cameraPhase));
+      prevPhaseRef.current = cameraPhase;
     }
 
-    // Animate camera reset
-    if (isResettingRef.current && resetStartTimeRef.current !== null) {
-      const elapsed = (Date.now() - resetStartTimeRef.current) / 1000;
-      const progress = Math.min(elapsed / resetDuration, 1.0);
+    // Animate camera to target position
+    if (isAnimatingRef.current && animStartTimeRef.current !== null) {
+      const elapsed = (Date.now() - animStartTimeRef.current) / 1000;
+      const progress = Math.min(elapsed / animDuration, 1.0);
 
-      // Ease out cubic for smooth deceleration
-      const eased = 1 - Math.pow(1 - progress, 3);
+      // Ease in-out cubic for smooth acceleration and deceleration
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
       // Interpolate camera position
-      camera.position.lerpVectors(startPositionRef.current, defaultPosition, eased);
+      camera.position.lerpVectors(startPositionRef.current, targetPositionRef.current, eased);
 
-      // Update controls target smoothly
+      // Update controls
       if (controlsRef.current) {
         controlsRef.current.update();
       }
 
-      // Complete reset
+      // Complete animation
       if (progress >= 1.0) {
-        isResettingRef.current = false;
-        resetStartTimeRef.current = null;
-        camera.position.copy(defaultPosition);
+        isAnimatingRef.current = false;
+        animStartTimeRef.current = null;
+        camera.position.copy(targetPositionRef.current);
       }
     }
   });
@@ -98,7 +126,7 @@ function CameraController({ containerState }: { containerState: string }) {
 }
 
 export function Canvas3D() {
-  const { containerStatus } = useAppState();
+  const { containerStatus, cameraPhase } = useAppState();
 
   // Map app ContainerStatus to Container3D ContainerState
   // PoC has 4 states: 'ready' | 'building' | 'running' | 'error'
@@ -137,8 +165,8 @@ export function Canvas3D() {
           {/* Container 3D visualization */}
           <Container3D state={containerState} />
 
-          {/* Camera controls with smooth reset on state transitions */}
-          <CameraController containerState={containerState} />
+          {/* Camera controls with choreographed movements for building sequence */}
+          <CameraController cameraPhase={cameraPhase} />
         </Canvas>
       </Suspense>
 

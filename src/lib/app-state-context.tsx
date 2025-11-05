@@ -9,6 +9,9 @@ import {
   HistogramEvent,
 } from '@/types/docker';
 
+// Camera choreography phase for building sequence
+export type CameraPhase = 'default' | 'buildStart' | 'doorsClosing' | 'terminal' | 'runningRotate';
+
 // App state interface as specified in the PRD
 export interface AppState {
   selectedImage: DockerImage | null;
@@ -18,6 +21,7 @@ export interface AppState {
   histogram: HistogramEvent[];
   panelOpen: boolean;
   activeTab: 'logs' | 'histogram' | 'ports' | 'actions';
+  cameraPhase: CameraPhase;
 }
 
 // Context actions interface
@@ -31,6 +35,7 @@ interface AppStateActions {
   setHistogram: (events: HistogramEvent[]) => void;
   setPanelOpen: (open: boolean) => void;
   setActiveTab: (tab: 'logs' | 'histogram' | 'ports' | 'actions') => void;
+  setCameraPhase: (phase: CameraPhase) => void;
 }
 
 // Combined context type
@@ -48,6 +53,7 @@ const initialState: AppState = {
   histogram: [],
   panelOpen: false,
   activeTab: 'logs',
+  cameraPhase: 'default',
 };
 
 // Provider component
@@ -69,6 +75,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<'logs' | 'histogram' | 'ports' | 'actions'>(
     initialState.activeTab
   );
+  const [cameraPhase, setCameraPhase] = useState<CameraPhase>(initialState.cameraPhase);
 
   // Helper function to add a single log entry
   const addLog = (log: LogEntry) => {
@@ -88,6 +95,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     histogram,
     panelOpen,
     activeTab,
+    cameraPhase,
     setSelectedImage,
     setContainerStatus,
     setConfig,
@@ -97,6 +105,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setHistogram,
     setPanelOpen,
     setActiveTab,
+    setCameraPhase,
   };
 
   return (

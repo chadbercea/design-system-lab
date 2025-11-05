@@ -8,12 +8,14 @@ import type { ContainerState } from '@/lib/container-colors';
 import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
 import { ImageCrateModel } from './ImageCrate/ImageCrateModel';
 import { ContainerDoors } from './ContainerDoors';
+import { useAppState } from '@/lib/app-state-context';
 
 interface Container3DProps {
   state?: ContainerState;
 }
 
 export function Container3D({ state = 'ready' }: Container3DProps) {
+  const { setCameraPhase } = useAppState();
   const containerRef = useRef<THREE.Group>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const glowMeshRef = useRef<THREE.Mesh>(null);
@@ -164,6 +166,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       dottedWireframeMaterial.opacity = 0.7;
       solidWireframeMaterial.opacity = 1.0;
       solidWireframeMaterial.transparent = false;
+      // Camera: Move to 45° off left door to see crate entering
+      setCameraPhase('buildStart');
     } else if (state === 'ready') {
       // Ready state: same as building but doors closed
       setUsesDottedMaterial(true);
@@ -171,6 +175,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('closed');
       setIdleAnimationStart(null);
       dottedWireframeMaterial.opacity = 1.0;
+      // Camera: Return to default free roam
+      setCameraPhase('default');
     } else if (state === 'running') {
       // Running state: fade from black to blue, auto rotate
       setUsesDottedMaterial(false);
@@ -178,6 +184,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('closed');
       setIdleAnimationStart(null);
       setRunningFadeStart(Date.now());
+      // Camera: Move to 45° off right side for running state
+      setCameraPhase('runningRotate');
     } else if (state === 'error') {
       // Error state: camera rotates to door side, doors open with black fill
       setUsesDottedMaterial(false);
@@ -185,13 +193,16 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('open');
       setIdleAnimationStart(null);
       setErrorCameraStart(Date.now());
+      // Camera: Error state uses default
+      setCameraPhase('default');
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
       setDoorState('closed');
       setIdleAnimationStart(null);
+      setCameraPhase('default');
     }
-  }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
+  }, [state, dottedWireframeMaterial, solidWireframeMaterial, setCameraPhase]);
 
   // Animation loop
   useFrame((frameState) => {
@@ -243,6 +254,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           setIsTransitioning(true);
           setTransitionStart(Date.now());
           setDoorCloseTriggered(true);
+          // Camera: Move to front view of doors to watch them close
+          setCameraPhase('doorsClosing');
         }
       }
 
@@ -467,6 +480,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           // Start terminal text when doors finish closing
           if (state === 'building' && terminalStart === null) {
             setTerminalStart(Date.now());
+            // Camera: Hold front view to watch terminal text on left door
+            setCameraPhase('terminal');
           }
         }}
       />
