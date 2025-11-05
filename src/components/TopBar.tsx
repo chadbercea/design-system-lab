@@ -5,22 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function TopBar() {
-  const { selectedImage, containerStatus, setPanelOpen, activeTab, setActiveTab } = useAppState();
-
-  // Handle action button clicks
-  const handleLogsClick = () => {
-    setActiveTab('logs');
-    setPanelOpen(true);
-  };
-
-  const handleSettingsClick = () => {
-    setActiveTab('actions');
-    setPanelOpen(true);
-  };
+  const { selectedImage, containerStatus, setContainerStatus } = useAppState();
 
   const handleStatusToggle = () => {
-    // This will be implemented when container control is added
-    console.log('Toggle container status');
+    if (containerStatus === 'running') {
+      setContainerStatus('stopped');
+    } else if (containerStatus === 'stopped' || containerStatus === 'idle') {
+      // Simulate build sequence
+      setContainerStatus('building');
+      // After 8 seconds, transition to running
+      setTimeout(() => {
+        setContainerStatus('running');
+      }, 8000);
+    }
   };
 
   return (
@@ -57,22 +54,6 @@ export function TopBar() {
 
       {/* Right: Action buttons */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogsClick}
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
-        >
-          Logs ▼
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSettingsClick}
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
-        >
-          ⚙️ Settings
-        </Button>
         <Button
           variant="outline"
           size="sm"

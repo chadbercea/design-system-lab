@@ -1,24 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppStateProvider, useAppState } from '@/lib/app-state-context';
 import { TopBar } from '@/components/TopBar';
 import { BottomBar } from '@/components/BottomBar';
 import { ImageSelectorModal } from '@/components/ImageSelectorModal';
 import { Canvas3D } from '@/components/Canvas3D';
 import { SidePanel } from '@/components/SidePanel';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/EmptyState';
+import { DrawerToggle } from '@/components/DrawerToggle';
 
 function AppContent() {
   const { selectedImage } = useAppState();
   const [showImageSelector, setShowImageSelector] = useState(false);
-
-  // Show image selector on first launch if no image is selected
-  useEffect(() => {
-    if (!selectedImage) {
-      setShowImageSelector(true);
-    }
-  }, [selectedImage]);
 
   return (
     <>
@@ -29,9 +23,13 @@ function AppContent() {
 
         {/* Main content area */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Canvas3D - center, maintains 100vh × 100vw */}
+          {/* Canvas3D or EmptyState */}
           <div className="flex flex-1">
-            <Canvas3D />
+            {selectedImage ? (
+              <Canvas3D />
+            ) : (
+              <EmptyState onSelectImage={() => setShowImageSelector(true)} />
+            )}
           </div>
         </div>
 
@@ -44,6 +42,9 @@ function AppContent() {
         open={showImageSelector}
         onOpenChange={setShowImageSelector}
       />
+
+      {/* DrawerToggle - right edge button */}
+      {selectedImage && <DrawerToggle />}
 
       {/* SidePanel - right overlay */}
       <SidePanel />
