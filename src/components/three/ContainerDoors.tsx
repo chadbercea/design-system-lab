@@ -2,10 +2,11 @@ import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CONTAINER_COLORS } from '@/lib/container-colors'
+import type { ContainerState } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
   state: 'open' | 'closing' | 'closed'
-  containerState?: 'ready' | 'building' | 'running' | 'error'
+  containerState?: ContainerState
   wireframeMaterial: THREE.LineBasicMaterial | THREE.LineDashedMaterial
   buildingDoorOpacity?: number
   onAnimationComplete?: () => void

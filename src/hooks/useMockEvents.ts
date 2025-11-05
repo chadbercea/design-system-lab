@@ -11,8 +11,8 @@ import { simulateContainerStartup } from '@/lib/mock-docker-api';
  * Real API: window.dockerDesktopAPI.containers.subscribe(containerId, callback)
  *
  * This hook demonstrates container state transitions:
- * stopped -> building -> running
- * running -> stopped
+ * ready -> building -> running
+ * running -> ready
  * building -> error
  */
 
@@ -30,7 +30,7 @@ export interface UseMockEventsOptions {
 
 export function useMockEvents({
   containerId,
-  initialStatus = 'stopped',
+  initialStatus = 'ready',
 }: UseMockEventsOptions) {
   const [status, setStatus] = useState<ContainerStatus>(initialStatus);
   const [events, setEvents] = useState<ContainerEvent[]>([]);
@@ -82,11 +82,11 @@ export function useMockEvents({
     if (!containerId || isTransitioning) return;
 
     setIsTransitioning(true);
-    addEvent('stopped', 'Stopping container...');
+    addEvent('ready', 'Stopping container...');
 
     // Simulate stop delay
     setTimeout(() => {
-      addEvent('stopped', 'Container stopped');
+      addEvent('ready', 'Container stopped');
       setIsTransitioning(false);
     }, 1500);
   }, [containerId, isTransitioning, addEvent]);

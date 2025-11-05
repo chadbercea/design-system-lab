@@ -76,7 +76,7 @@ export async function runContainer(
  * TODO: Replace with Docker Desktop API call
  * Real API: window.dockerDesktopAPI.containers.stop(containerId)
  * Expected response: void
- * Error handling: Container not found, already stopped
+ * Error handling: Container not found, already ready
  */
 export async function stopContainer(containerId: string): Promise<void> {
   await randomDelay();
@@ -260,7 +260,7 @@ export function createStatsStream(
       case 'building':
         stats = generateBuildingStats();
         break;
-      case 'stopped':
+      case 'ready':
       case 'error':
         stats = generateIdleStats();
         break;
