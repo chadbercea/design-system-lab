@@ -9,8 +9,8 @@ export function TopBar() {
 
   const handleStatusToggle = () => {
     if (containerStatus === 'running') {
-      setContainerStatus('stopped');
-    } else if (containerStatus === 'stopped' || containerStatus === 'idle') {
+      setContainerStatus('ready');
+    } else if (containerStatus === 'ready') {
       // Simulate build sequence
       setContainerStatus('building');
       // After 8 seconds, transition to running

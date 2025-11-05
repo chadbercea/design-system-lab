@@ -42,7 +42,7 @@ const AppStateContext = createContext<AppStateContextType | undefined>(undefined
 // Initial state
 const initialState: AppState = {
   selectedImage: null,
-  containerStatus: 'stopped',
+  containerStatus: 'ready',
   config: null,
   logs: [],
   histogram: [],

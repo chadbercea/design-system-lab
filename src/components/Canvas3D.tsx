@@ -31,24 +31,9 @@ export function Canvas3D() {
   const { containerStatus } = useAppState();
 
   // Map app ContainerStatus to Container3D ContainerState
-  // ContainerStatus: 'building' | 'running' | 'stopped' | 'error'
-  // ContainerState: 'building' | 'ready' | 'running' | 'error'
-  const mapStatusToState = (status: string): 'building' | 'ready' | 'running' | 'error' | 'idle' | 'stopped' => {
-    switch (status) {
-      case 'building':
-        return 'building';
-      case 'running':
-        return 'running';
-      case 'error':
-        return 'error';
-      case 'stopped':
-        return 'stopped';
-      default:
-        return 'idle';
-    }
-  };
-
-  const containerState = mapStatusToState(containerStatus);
+  // PoC has 4 states: 'ready' | 'building' | 'running' | 'error'
+  // No mapping needed - ContainerStatus matches Container3D states exactly
+  const containerState = containerStatus;
 
   return (
     <div className="relative h-full w-full bg-black">
@@ -82,11 +67,11 @@ export function Canvas3D() {
           {/* Container 3D visualization */}
           <Container3D state={containerState} />
 
-          {/* Controls - only enable rotation for idle/stopped states */}
+          {/* Controls - only enable rotation for ready state */}
           <OrbitControls
             enablePan={false}
             enableZoom={true}
-            enableRotate={containerState === 'idle' || containerState === 'stopped'}
+            enableRotate={containerState === 'ready'}
             minDistance={10}
             maxDistance={30}
             maxPolarAngle={Math.PI / 2}

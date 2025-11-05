@@ -10,9 +10,9 @@ export interface DockerImage {
 }
 
 export type ContainerStatus =
+  | 'ready'
   | 'building'
   | 'running'
-  | 'stopped'
   | 'error';
 
 export interface ContainerConfig {

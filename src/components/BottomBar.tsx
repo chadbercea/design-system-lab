@@ -51,12 +51,12 @@ export function BottomBar() {
           text: 'Error',
           textColor: 'text-red-400',
         };
-      case 'stopped':
+      case 'ready':
       default:
         return {
-          color: 'bg-zinc-500',
-          text: 'Stopped',
-          textColor: 'text-zinc-400',
+          color: 'bg-blue-400',
+          text: 'Ready',
+          textColor: 'text-blue-400',
         };
     }
   };

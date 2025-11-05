@@ -27,17 +27,17 @@ export function ActionsTab() {
   };
 
   const handlePause = () => {
-    setContainerStatus('stopped');
+    setContainerStatus('ready');
     setConfirmAction(null);
   };
 
   const handleStop = () => {
-    setContainerStatus('stopped');
+    setContainerStatus('ready');
     setConfirmAction(null);
   };
 
   const handleRemove = () => {
-    setContainerStatus('stopped');
+    setContainerStatus('ready');
     setConfirmAction(null);
     // TODO: Actually remove container in future implementation
   };
@@ -52,7 +52,7 @@ export function ActionsTab() {
   const canRestart = containerStatus === 'running' || containerStatus === 'error';
   const canPause = containerStatus === 'running';
   const canStop = containerStatus === 'running' || containerStatus === 'building';
-  const canRemove = containerStatus === 'stopped' || containerStatus === 'error';
+  const canRemove = containerStatus === 'ready' || containerStatus === 'error';
   const canPersist = config !== null;
 
   return (
