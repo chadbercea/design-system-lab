@@ -5,7 +5,7 @@ import { CONTAINER_COLORS } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
   state: 'open' | 'closing' | 'closed'
-  containerState?: 'building' | 'ready' | 'running' | 'error'
+  containerState?: 'idle' | 'building' | 'ready' | 'running' | 'error' | 'stopped'
   wireframeMaterial: THREE.LineBasicMaterial | THREE.LineDashedMaterial
   buildingDoorOpacity?: number
   onAnimationComplete?: () => void
