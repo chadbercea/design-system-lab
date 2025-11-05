@@ -11,12 +11,18 @@ export function TopBar() {
     if (containerStatus === 'running') {
       setContainerStatus('ready');
     } else if (containerStatus === 'ready') {
-      // Simulate build sequence
+      // Start build sequence
       setContainerStatus('building');
-      // After 8 seconds, transition to running
+      // Auto-transition to running after complete build sequence:
+      // - Wall fades: ~4.4s
+      // - Door closing: ~2.15s
+      // - Terminal text: ~7s (211 chars ÷ 30 chars/sec)
+      // - "Starting..." display: 2s
+      // - Camera rotation: ~1s
+      // Total: ~16.5 seconds
       setTimeout(() => {
         setContainerStatus('running');
-      }, 8000);
+      }, 17000);
     }
   };
 
