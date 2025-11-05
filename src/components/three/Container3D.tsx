@@ -246,30 +246,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         }
       }
 
-      // Camera rotation starts after doors close
-      if (doorState === 'closed' && !cameraRotationComplete && cameraRotationStart === null) {
-        setCameraRotationStart(Date.now());
-      }
-
-      if (cameraRotationStart !== null && !cameraRotationComplete) {
-        const elapsed = (Date.now() - cameraRotationStart) / 1000;
-        const rotationDuration = 1.0; // 1 second rotation
-        const progress = Math.min(elapsed / rotationDuration, 1.0);
-
-        // Ease out cubic
-        const eased = 1 - Math.pow(1 - progress, 3);
-
-        // Rotate container to the RIGHT to show right side panel (negative rotation)
-        // -45 degrees to show the RIGHT side from outside
-        const targetRotation = -(Math.PI / 4);
-        if (containerRef.current) {
-          containerRef.current.rotation.y = eased * targetRotation;
-        }
-
-        if (progress >= 1.0 && !cameraRotationComplete) {
-          setCameraRotationComplete(true);
-        }
-      }
+      // No camera rotation during building - keep container front-facing so user can see terminal text on doors
 
       // Terminal text animation - types characters sequentially
       if (terminalStart !== null) {

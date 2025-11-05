@@ -14,15 +14,14 @@ export function TopBar() {
       // Start build sequence
       setContainerStatus('building');
       // Auto-transition to running after complete build sequence:
-      // - Wall fades: ~4.4s
-      // - Door closing: ~2.15s
-      // - Terminal text: ~7s (211 chars ÷ 30 chars/sec)
+      // - Crate enters + walls fade: ~6.5s
+      // - Doors close during fade: ~2.15s
+      // - Terminal text types: ~7s (211 chars ÷ 30 chars/sec)
       // - "Starting..." display: 2s
-      // - Camera rotation: ~1s
-      // Total: ~16.5 seconds
+      // Total: ~17.5 seconds + buffer
       setTimeout(() => {
         setContainerStatus('running');
-      }, 17000);
+      }, 20000);
     }
   };
 
