@@ -25,6 +25,7 @@ export interface PortMapping {
   containerPort: number;
   hostPort: number;
   protocol?: 'tcp' | 'udp';
+  status?: 'working' | 'failed' | 'pending';
 }
 
 export interface VolumeMapping {

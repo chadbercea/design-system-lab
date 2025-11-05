@@ -6,6 +6,7 @@ import { TopBar } from '@/components/TopBar';
 import { BottomBar } from '@/components/BottomBar';
 import { ImageSelectorModal } from '@/components/ImageSelectorModal';
 import { Canvas3D } from '@/components/Canvas3D';
+import { SidePanel } from '@/components/SidePanel';
 import { Button } from '@/components/ui/button';
 
 function AppContent() {
@@ -32,9 +33,6 @@ function AppContent() {
           <div className="flex flex-1">
             <Canvas3D />
           </div>
-
-          {/* SidePanel - right (conditional, handled in future ticket) */}
-          {/* Will be added in a separate ticket */}
         </div>
 
         {/* BottomBar - persistent, 40px */}
@@ -46,6 +44,9 @@ function AppContent() {
         open={showImageSelector}
         onOpenChange={setShowImageSelector}
       />
+
+      {/* SidePanel - right overlay */}
+      <SidePanel />
     </>
   );
 }
