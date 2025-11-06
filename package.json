@@ -9,7 +9,7 @@
     "lint": "eslint",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "deploy": "next build && touch out/.nojekyll && gh-pages -d out -t true"
+    "deploy": "next build && touch out/.nojekyll && gh-pages -d out -t"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
