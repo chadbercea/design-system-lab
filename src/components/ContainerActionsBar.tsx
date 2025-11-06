@@ -3,22 +3,14 @@
 import { useAppState } from '@/lib/app-state-context'
 import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { RotateCcw, Pause, Square, MoreVertical, Trash2, Save } from 'lucide-react'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { RotateCcw, Pause, Square, Trash2, Save } from 'lucide-react'
 import { useState } from 'react'
 
 interface ContainerActionsBarProps {
@@ -85,7 +77,7 @@ export function ContainerActionsBar({ isTerminalOpen }: ContainerActionsBarProps
           size="sm"
           disabled={!canRestart}
           onClick={handleRestart}
-          className="h-8 px-3"
+          className="h-8 px-3 text-zinc-300 hover:text-white"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Restart
@@ -96,7 +88,7 @@ export function ContainerActionsBar({ isTerminalOpen }: ContainerActionsBarProps
           size="sm"
           disabled={!canPause}
           onClick={handlePause}
-          className="h-8 px-3"
+          className="h-8 px-3 text-zinc-300 hover:text-white"
         >
           <Pause className="h-4 w-4 mr-2" />
           Pause
@@ -107,76 +99,76 @@ export function ContainerActionsBar({ isTerminalOpen }: ContainerActionsBarProps
           size="sm"
           disabled={!canStop}
           onClick={handleStop}
-          className="h-8 px-3"
+          className="h-8 px-3 text-zinc-300 hover:text-white"
         >
           <Square className="h-4 w-4 mr-2" />
           Stop
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              disabled={!canRemove}
-              onClick={() => setShowRemoveDialog(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Container
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={!canPersist}
-              onClick={() => setShowPersistDialog(true)}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Config
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="h-4 w-px bg-zinc-700 mx-1" />
+
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={!canRemove}
+          onClick={() => setShowRemoveDialog(true)}
+          className="h-8 px-3 text-zinc-300 hover:text-red-400"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={!canPersist}
+          onClick={() => setShowPersistDialog(true)}
+          className="h-8 px-3 text-zinc-300 hover:text-white"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save
+        </Button>
       </div>
 
       {/* Remove Container Confirmation Dialog */}
-      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Container</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-700">
+          <DialogHeader>
+            <DialogTitle>Remove Container</DialogTitle>
+            <DialogDescription>
               Are you sure you want to remove this container? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRemoveDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleRemove}>
               Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Save Config Confirmation Dialog */}
-      <AlertDialog open={showPersistDialog} onOpenChange={setShowPersistDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Save Configuration</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={showPersistDialog} onOpenChange={setShowPersistDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-700">
+          <DialogHeader>
+            <DialogTitle>Save Configuration</DialogTitle>
+            <DialogDescription>
               Save the current container configuration for future use?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handlePersist}>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPersistDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePersist}>
               Save
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
