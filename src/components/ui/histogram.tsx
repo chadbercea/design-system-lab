@@ -140,7 +140,7 @@ export function MetricDisplay({
 }: MetricDisplayProps) {
   const trendColor =
     trend === "up"
-      ? "text-green-500"
+      ? "text-zinc-500"
       : trend === "down"
         ? "text-red-500"
         : "text-zinc-400";

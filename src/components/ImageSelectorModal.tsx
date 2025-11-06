@@ -87,12 +87,12 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
 
         <div className="space-y-4">
           {/* Sample Image Option */}
-          <div className="rounded-lg border border-blue-800 bg-blue-950/20 p-4">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/20 p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-blue-300">Use Sample Image</h3>
-                  <Badge variant="outline" className="bg-blue-900/30 text-blue-400 border-blue-700">
+                  <h3 className="font-medium text-zinc-300">Use Sample Image</h3>
+                  <Badge variant="outline" className="bg-zinc-900/30 text-zinc-400 border-zinc-700">
                     Recommended
                   </Badge>
                 </div>
@@ -102,7 +102,7 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
               </div>
               <Button
                 onClick={handleUseSample}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-zinc-600 hover:bg-zinc-700 text-white"
               >
                 Use Sample
               </Button>
@@ -139,7 +139,7 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
                 onClick={() => handleImageSelect(image)}
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${
                   selectedImageId === image.id
-                    ? 'border-blue-600 bg-blue-950/30'
+                    ? 'border-zinc-600 bg-zinc-950/30'
                     : 'border-zinc-800 bg-zinc-800/30 hover:bg-zinc-800/50'
                 }`}
               >
@@ -147,7 +147,7 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded bg-zinc-800">
                       <svg
-                        className="h-6 w-6 text-blue-500"
+                        className="h-6 w-6 text-zinc-500"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
@@ -182,7 +182,7 @@ export function ImageSelectorModal({ open, onOpenChange }: ImageSelectorModalPro
             <Button
               onClick={handleConfirm}
               disabled={!selectedImageId}
-              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+              className="bg-zinc-600 hover:bg-zinc-700 text-white disabled:opacity-50"
             >
               Select Image
             </Button>

@@ -15,7 +15,7 @@ interface Container3DProps {
 }
 
 export function Container3D({ state = 'ready' }: Container3DProps) {
-  const { setCameraPhase } = useAppState();
+  const { setCameraPhase, selectedImage, userInteracting } = useAppState();
   const containerRef = useRef<THREE.Group>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const glowMeshRef = useRef<THREE.Mesh>(null);
@@ -54,18 +54,23 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [containerRotationComplete, setContainerRotationComplete] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
 
-  // Terminal text animation state
+  // Terminal text animation state (left door)
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [terminalStart, setTerminalStart] = useState<number | null>(null);
   const [terminalCharCount, setTerminalCharCount] = useState(0);
+  const [terminalComplete, setTerminalComplete] = useState(false);
 
   // Shipping label text animation state (right wall)
   const [shippingLabelLines, setShippingLabelLines] = useState<string[]>([]);
   const [shippingLabelStart, setShippingLabelStart] = useState<number | null>(null);
+  const [shippingLabelComplete, setShippingLabelComplete] = useState(false);
 
   // Canvas texture for shipping label
   const shippingLabelTextureRef = useRef<THREE.CanvasTexture | null>(null);
   const shippingLabelCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Docker logo texture for left door (replaces terminal text after animation)
+  const [dockerLogoTexture, setDockerLogoTexture] = useState<THREE.Texture | null>(null);
 
   // Running state animation
   const [runningFadeStart, setRunningFadeStart] = useState<number | null>(null);
@@ -132,6 +137,32 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
   // Current wireframe material - red for error, white dashed for building, white solid for others
   const currentWireframeMaterial = state === 'error' ? redWireframeMaterial : (usesDottedMaterial ? dottedWireframeMaterial : solidWireframeMaterial);
+
+  // Load Docker logo texture for left door (replaces terminal text after animation)
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Transparent background
+        ctx.clearRect(0, 0, 512, 512);
+        // Draw Docker logo centered - maintains aspect ratio
+        const logoSize = 400;
+        const x = (512 - logoSize) / 2;
+        const y = (512 - logoSize) / 2;
+        ctx.drawImage(img, x, y, logoSize, logoSize);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        setDockerLogoTexture(texture);
+      }
+    };
+    img.src = '/docker-logo.svg';
+  }, []);
 
   // Building state glow material
   const glowMaterial = useMemo(() => {
@@ -305,12 +336,13 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         const elapsed = (Date.now() - terminalStart) / 1000;
         const charsPerSecond = 30; // Character typing speed
 
+        const imageName = selectedImage ? `${selectedImage.name}:${selectedImage.tag}` : 'nginx:alpine';
         const allLines = [
           'Loading Dockerfile...',
-          'Step 1/5: FROM nginx:alpine',
-          'Step 2/5: COPY . /usr/share/nginx/html',
+          `Step 1/5: FROM ${imageName}`,
+          'Step 2/5: COPY . /app',
           'Step 3/5: EXPOSE 80',
-          'Step 4/5: CMD ["nginx", "-g", "daemon off;"]',
+          'Step 4/5: CMD ["start"]',
           'Step 5/5: Successfully built container',
           'Starting...'
         ];
@@ -318,6 +350,11 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         // Calculate total characters needed
         const totalChars = allLines.reduce((sum, line) => sum + line.length, 0);
         const targetCharCount = Math.min(Math.floor(elapsed * charsPerSecond), totalChars);
+
+        // Mark animation as complete when all chars are shown
+        if (targetCharCount >= totalChars && !terminalComplete) {
+          setTerminalComplete(true);
+        }
 
         // Build visible lines by character count
         let charsRemaining = targetCharCount;
@@ -361,13 +398,11 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           const startRotation = 0;
           containerRef.current.rotation.y = startRotation + (targetRotation - startRotation) * eased;
 
-          // Mark rotation complete and trigger camera move + shipping label
+          // Mark rotation complete - no additional camera movement
           if (rotationProgress >= 1.0) {
             setContainerRotationComplete(true);
-            // Lock rotation at target angle
+            // Lock rotation at target angle and STAY at 45°
             containerRef.current.rotation.y = targetRotation;
-            // Now move camera to right 45° angle
-            setCameraPhase('runningRotate');
             // Start shipping label text animation
             if (shippingLabelStart === null) {
               setShippingLabelStart(Date.now());
@@ -393,7 +428,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         const charsPerSecond = 30; // Same speed as terminal
 
         // Structure: title + label/value pairs matching Figma design
-        const title = 'nginx : latest';
+        const title = selectedImage ? `${selectedImage.name} : ${selectedImage.tag}` : 'nginx : latest';
         const labelValuePairs = [
           { label: 'Status:', value: 'Running' },
           { label: 'Ports:', value: '80:8080/tcp' },
@@ -406,6 +441,11 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         const totalChars = title.length + labelValuePairs.reduce((sum, pair) =>
           sum + pair.label.length + pair.value.length, 0);
         const targetCharCount = Math.min(Math.floor(elapsed * charsPerSecond), totalChars);
+
+        // Mark animation as complete when all chars are shown
+        if (targetCharCount >= totalChars && !shippingLabelComplete) {
+          setShippingLabelComplete(true);
+        }
 
         // Determine what should be visible
         let charsRemaining = targetCharCount;
@@ -452,16 +492,16 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
           // Draw title - large size, aligned to upper left
           if (visibleTitle.length > 0) {
-            ctx.fillStyle = '#b3b3b3'; // Gray per Figma
-            ctx.font = 'bold 120px Inter, Arial, sans-serif';
+            ctx.fillStyle = '#ffffff'; // White monochrome
+            ctx.font = 'bold 120px "Fira Code", "Courier New", monospace';
             ctx.textBaseline = 'top';
             ctx.fillText(visibleTitle, 50, 50);
           }
 
           // Draw label/value pairs - large size to fill green box
           if (visiblePairs.length > 0) {
-            ctx.fillStyle = '#b3b3b3';
-            ctx.font = '60px Inter, Arial, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '60px "Fira Code", "Courier New", monospace';
 
             const startY = 230; // Below title
             const lineHeight = 90; // Proportional spacing
@@ -499,10 +539,21 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         containerRef.current.rotation.y = targetAngle * eased;
         containerRef.current.scale.setScalar(1.0);
       }
+    } else if (state === 'ready') {
+      // Ready state: smooth idle spinning animation (unless user is interacting)
+      if (containerRef.current && !userInteracting) {
+        const spinSpeed = 0.2; // Slow rotation speed
+        containerRef.current.rotation.y = elapsed * spinSpeed;
+        containerRef.current.scale.setScalar(1.0);
+      } else if (containerRef.current && userInteracting) {
+        // When user releases, rotation.y stays at current value
+        // On next frame when userInteracting becomes false, animation resumes from there
+        containerRef.current.scale.setScalar(1.0);
+      }
     } else {
       if (containerRef.current) {
         containerRef.current.rotation.y = 0;
-        containerRef.current.scale.setScalar(1.0); // Reset scale when not in building state
+        containerRef.current.scale.setScalar(1.0); // Reset scale when not in other states
       }
     }
 
@@ -623,6 +674,9 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         wireframeMaterial={currentWireframeMaterial}
         buildingDoorOpacity={wallOpacities.doors}
         terminalLines={terminalLines}
+        terminalComplete={terminalComplete}
+        shippingLabelComplete={shippingLabelComplete}
+        dockerLogoTexture={dockerLogoTexture}
         onAnimationComplete={() => {
           setDoorState('closed');
           // Start terminal text when doors finish closing
@@ -640,7 +694,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           state={crateState}
           showLogo={true}
           scale={1.0}
-          imageName="nginx:latest"
+          imageName={selectedImage ? `${selectedImage.name}:${selectedImage.tag}` : "nginx:latest"}
           showLoadingText={true}
           onAnimationComplete={(newState) => {
             // Handle animation state transitions
@@ -661,27 +715,31 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       {state === 'building' && (
         <Html position={[0, 7, 0]} center distanceFactor={10}>
           <div style={{
-            background: 'rgba(33, 150, 243, 0.2)',
+            background: 'rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(33, 150, 243, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
             padding: '12px 24px',
-            color: '#64B5F6',
+            color: '#ffffff',
             fontSize: '18px',
             fontWeight: '600',
             whiteSpace: 'nowrap',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: '"Fira Code", "Courier New", monospace',
           }}>
             Building container...
           </div>
         </Html>
       )}
 
-      {/* Shipping label on right wall - canvas texture applied to wall surface */}
+      {/* Shipping label on right wall - shows container info */}
       {state === 'running' && shippingLabelStart !== null && shippingLabelTextureRef.current && (
         <mesh position={[3.01, 3.5, 2]} rotation={[0, Math.PI / 2, 0]}>
           <planeGeometry args={[4, 3]} />
-          <meshBasicMaterial map={shippingLabelTextureRef.current} transparent side={THREE.DoubleSide} />
+          <meshBasicMaterial
+            map={shippingLabelTextureRef.current}
+            transparent
+            side={THREE.DoubleSide}
+          />
         </mesh>
       )}
 

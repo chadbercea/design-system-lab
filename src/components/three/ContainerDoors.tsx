@@ -11,6 +11,9 @@ interface ContainerDoorsProps {
   buildingDoorOpacity?: number
   onAnimationComplete?: () => void
   terminalLines?: string[]
+  terminalComplete?: boolean
+  shippingLabelComplete?: boolean
+  dockerLogoTexture?: THREE.Texture | null
 }
 
 // Container dimensions (matching Container3D.tsx)
@@ -59,7 +62,7 @@ const settleEffect = (t: number): number => {
   return t >= 1.0 ? 1.0 : t
 }
 
-export function ContainerDoors({ state, containerState, wireframeMaterial, buildingDoorOpacity = 0, onAnimationComplete, terminalLines = [] }: ContainerDoorsProps) {
+export function ContainerDoors({ state, containerState, wireframeMaterial, buildingDoorOpacity = 0, onAnimationComplete, terminalLines = [], terminalComplete = false, shippingLabelComplete = false, dockerLogoTexture = null }: ContainerDoorsProps) {
   const leftDoorRef = useRef<THREE.Group>(null)
   const rightDoorRef = useRef<THREE.Group>(null)
   const leftDoorWireframeRef = useRef<THREE.LineSegments>(null)
@@ -166,8 +169,8 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
       ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      ctx.fillStyle = '#00FF00'
-      ctx.font = '28px Monaco, Courier New, monospace'
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = '28px "Fira Code", Monaco, Courier New, monospace'
       ctx.textBaseline = 'top'
 
       const lineHeight = 45
@@ -276,12 +279,21 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
           </group>
         ))}
 
-        {/* Terminal text on left door surface - canvas texture */}
-        {containerState === 'building' && terminalLines.length > 0 && terminalTextureRef.current && (
-          <mesh position={[DOOR.width / 2, 0, DOOR.depth / 2 + 0.01]}>
-            <planeGeometry args={[DOOR.width - 0.4, DOOR.height - 0.6]} />
-            <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.DoubleSide} />
+        {/* Terminal text or Docker logo on left door surface */}
+        {terminalComplete && shippingLabelComplete && dockerLogoTexture && (containerState === 'building' || containerState === 'running') ? (
+          // Docker logo after BOTH terminal and shipping label complete - half size, top left with padding
+          <mesh position={[0.8, DOOR.height / 2 - 0.8, DOOR.depth / 2 + 0.01]}>
+            <planeGeometry args={[1.0, 1.0]} />
+            <meshBasicMaterial map={dockerLogoTexture} transparent side={THREE.DoubleSide} />
           </mesh>
+        ) : (
+          // Terminal text during building
+          containerState === 'building' && terminalLines.length > 0 && terminalTextureRef.current && (
+            <mesh position={[DOOR.width / 2, 0, DOOR.depth / 2 + 0.01]}>
+              <planeGeometry args={[DOOR.width - 0.4, DOOR.height - 0.6]} />
+              <meshBasicMaterial map={terminalTextureRef.current} transparent side={THREE.DoubleSide} />
+            </mesh>
+          )
         )}
       </group>
 

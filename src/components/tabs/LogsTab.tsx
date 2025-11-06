@@ -26,10 +26,10 @@ export function LogsTab() {
   // Show empty state if not running
   if (containerStatus !== 'running' && containerStatus !== 'building' && containerStatus !== 'error') {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex h-full items-center justify-center p-4">
         <div className="text-center text-zinc-500">
-          <p className="text-sm">No logs available</p>
-          <p className="mt-1 text-xs">Start the container to see logs</p>
+          <p className="text-xs">No logs available</p>
+          <p className="mt-1 text-[10px]">Start container to see logs</p>
         </div>
       </div>
     );
@@ -38,13 +38,13 @@ export function LogsTab() {
   return (
     <div className="flex h-full flex-col">
       {/* Logs header with status */}
-      <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-6 py-3">
+      <div className="flex items-center justify-between border-b border-black bg-zinc-900 px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-zinc-400">
+          <span className="text-[10px] font-medium text-zinc-400">
             {logs.length} {logs.length === 1 ? 'entry' : 'entries'}
           </span>
           {isStreaming && (
-            <Badge variant="outline" className="h-5 border-blue-700 bg-blue-900/20 text-blue-400">
+            <Badge variant="outline" className="h-4 border-zinc-700 bg-zinc-900/20 text-zinc-400 text-[9px] px-1">
               <span className="mr-1 animate-pulse">●</span>
               Live
             </Badge>
@@ -55,13 +55,13 @@ export function LogsTab() {
       {/* Logs content - scrollable */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-black px-6 py-4 font-mono text-xs"
+        className="flex-1 overflow-y-auto bg-black px-3 py-2 font-mono text-[10px]"
       >
         {logs.length === 0 ? (
-          <div className="text-zinc-600">Waiting for logs...</div>
+          <div className="text-zinc-600 text-[10px]">Waiting for logs...</div>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className="mb-1 flex gap-3">
+            <div key={log.id} className="mb-1 flex gap-2">
               {/* Timestamp */}
               <span className="flex-shrink-0 text-zinc-600">
                 {new Date(log.timestamp).toLocaleTimeString('en-US', {
@@ -80,16 +80,16 @@ export function LogsTab() {
                     : log.level === 'warn'
                     ? 'text-yellow-400'
                     : log.level === 'info'
-                    ? 'text-blue-400'
+                    ? 'text-zinc-400'
                     : 'text-zinc-500'
                 }`}
               >
-                {log.level}
+                {log.level.substring(0, 3)}
               </span>
 
               {/* Message */}
               <span
-                className={`flex-1 ${
+                className={`flex-1 break-words ${
                   log.level === 'error'
                     ? 'text-red-300'
                     : log.level === 'warn'

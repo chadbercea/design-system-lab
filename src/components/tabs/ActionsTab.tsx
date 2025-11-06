@@ -16,7 +16,7 @@ import { RotateCw, Pause, Square, Trash2, Save } from 'lucide-react';
 type ActionType = 'restart' | 'pause' | 'stop' | 'remove' | 'persist' | null;
 
 export function ActionsTab() {
-  const { containerStatus, setContainerStatus, config } = useAppState();
+  const { containerStatus, setContainerStatus, config, setSelectedImage } = useAppState();
   const [confirmAction, setConfirmAction] = useState<ActionType>(null);
 
   // Action handlers
@@ -38,8 +38,8 @@ export function ActionsTab() {
 
   const handleRemove = () => {
     setContainerStatus('ready');
+    setSelectedImage(null); // Reset to spinning placeholder
     setConfirmAction(null);
-    // TODO: Actually remove container in future implementation
   };
 
   const handlePersist = () => {
@@ -64,7 +64,7 @@ export function ActionsTab() {
 
           <Button
             variant="outline"
-            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
+            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-black"
             disabled={!canRestart}
             onClick={() => setConfirmAction('restart')}
           >
@@ -74,7 +74,7 @@ export function ActionsTab() {
 
           <Button
             variant="outline"
-            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
+            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-black"
             disabled={!canPause}
             onClick={() => setConfirmAction('pause')}
           >
@@ -84,7 +84,7 @@ export function ActionsTab() {
 
           <Button
             variant="outline"
-            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
+            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-black"
             disabled={!canStop}
             onClick={() => setConfirmAction('stop')}
           >
@@ -114,7 +114,7 @@ export function ActionsTab() {
 
           <Button
             variant="outline"
-            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
+            className="w-full justify-start bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-black"
             disabled={!canPersist}
             onClick={() => setConfirmAction('persist')}
           >
@@ -130,7 +130,7 @@ export function ActionsTab() {
 
       {/* Confirmation dialogs */}
       <Dialog open={confirmAction === 'restart'} onOpenChange={() => setConfirmAction(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogContent className="bg-zinc-900 border-black">
           <DialogHeader>
             <DialogTitle className="text-zinc-100">Restart Container?</DialogTitle>
             <DialogDescription className="text-zinc-400">
@@ -147,7 +147,7 @@ export function ActionsTab() {
       </Dialog>
 
       <Dialog open={confirmAction === 'pause'} onOpenChange={() => setConfirmAction(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogContent className="bg-zinc-900 border-black">
           <DialogHeader>
             <DialogTitle className="text-zinc-100">Pause Container?</DialogTitle>
             <DialogDescription className="text-zinc-400">
@@ -164,7 +164,7 @@ export function ActionsTab() {
       </Dialog>
 
       <Dialog open={confirmAction === 'stop'} onOpenChange={() => setConfirmAction(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogContent className="bg-zinc-900 border-black">
           <DialogHeader>
             <DialogTitle className="text-zinc-100">Stop Container?</DialogTitle>
             <DialogDescription className="text-zinc-400">
@@ -181,7 +181,7 @@ export function ActionsTab() {
       </Dialog>
 
       <Dialog open={confirmAction === 'remove'} onOpenChange={() => setConfirmAction(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogContent className="bg-zinc-900 border-black">
           <DialogHeader>
             <DialogTitle className="text-zinc-100 text-red-400">Remove Container?</DialogTitle>
             <DialogDescription className="text-zinc-400">
@@ -200,7 +200,7 @@ export function ActionsTab() {
       </Dialog>
 
       <Dialog open={confirmAction === 'persist'} onOpenChange={() => setConfirmAction(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
+        <DialogContent className="bg-zinc-900 border-black">
           <DialogHeader>
             <DialogTitle className="text-zinc-100">Save Configuration?</DialogTitle>
             <DialogDescription className="text-zinc-400">

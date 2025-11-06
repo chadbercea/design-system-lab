@@ -8,45 +8,45 @@
  */
 
 export const CONTAINER_COLORS = {
-  // State colors - Updated for ILI-144 PRD
-  IDLE: 0xFFFFFF,               // White wireframe (30% opacity)
-  BUILDING_START: 0x1e3a8a,     // Blue-900 (start of building)
-  BUILDING_END: 0x1a2332,       // Dark blue (end of building)
-  RUNNING: 0x1a2332,            // Dark blue solid (running state)
-  ERROR: 0xdc2626,              // Red-600 (error state)
-  STOPPED: 0x6b7280,            // Gray-500 (stopped state)
+  // State colors - Monochrome black/white only
+  IDLE: 0xFFFFFF,               // White wireframe
+  BUILDING_START: 0xFFFFFF,     // White (no color)
+  BUILDING_END: 0xFFFFFF,       // White (no color)
+  RUNNING: 0x000000,            // Black solid (running state)
+  ERROR: 0xFFFFFF,              // White (error state - no red)
+  STOPPED: 0x808080,            // Gray (stopped state)
 
-  // Legacy state colors (kept for compatibility)
-  BUILDING: 0x1e3a8a,           // Blue-900 (building)
-  BUILDING_PULSE: 0x64B5F6,     // Light electric blue (pulse peak)
-  READY: 0x90CAF9,              // Soft blue (idle state)
-  RUNNING_ACCENT: 0x66BB6A,     // Light green (highlights)
+  // Legacy state colors (converted to grayscale)
+  BUILDING: 0xFFFFFF,           // White (building)
+  BUILDING_PULSE: 0xFFFFFF,     // White (no pulse color)
+  READY: 0xFFFFFF,              // White (idle state)
+  RUNNING_ACCENT: 0xFFFFFF,     // White (no green)
 
-  // Structural colors
-  WIREFRAME_PRIMARY: 0x37474F,  // Blue-grey 800 (main edges)
-  WIREFRAME_DOTTED: 0x546E7A,   // Blue-grey 600 (inactive lines)
+  // Structural colors - black and white only
+  WIREFRAME_PRIMARY: 0xFFFFFF,  // White (main edges)
+  WIREFRAME_DOTTED: 0x808080,   // Gray (inactive lines)
   WALL_SURFACE: 0xFFFFFF,       // White (opaque walls)
   WALL_HIGHLIGHT: 0xFFFFFF,     // White (wall highlights)
 
   // Background
-  BACKGROUND: 0x121212,         // Near black
-  BACKGROUND_GRADIENT: 0x1A1A1A, // Dark grey (falloff)
+  BACKGROUND: 0x000000,         // Pure black
+  BACKGROUND_GRADIENT: 0x000000, // Pure black
 
-  // Image crate (original amber)
-  CRATE_BASE: 0xFFA726,         // Amber 400 (main color)
-  CRATE_GLOW: 0xFFB74D,         // Amber 300 (pulsing glow)
+  // Image crate - grayscale
+  CRATE_BASE: 0x808080,         // Gray (main color)
+  CRATE_GLOW: 0xC0C0C0,         // Light gray (glow)
   CRATE_ICON: 0xFFFFFF,         // White (Docker logo)
 
-  // Docker image crate (Docker blue - from ILI-89 design spec)
-  DOCKER_BLUE: 0x0db7ed,        // Docker blue (primary)
-  DOCKER_BLUE_LIGHT: 0x4dc9f0,  // Docker blue light (gradient top)
-  DOCKER_BLUE_DARK: 0x0995ba,   // Docker blue dark (logo/accents)
-  DOCKER_NAVY: 0x066da5,        // Docker navy (deep accent)
+  // Docker image crate - grayscale
+  DOCKER_BLUE: 0x808080,        // Gray
+  DOCKER_BLUE_LIGHT: 0xC0C0C0,  // Light gray
+  DOCKER_BLUE_DARK: 0x606060,   // Dark gray
+  DOCKER_NAVY: 0x404040,        // Darker gray
 
-  // UI accents
-  LABEL_TEXT: 0xE0E0E0,         // Light grey (labels)
-  MEASUREMENT_LINES: 0x616161,  // Grey 700 (dimensions)
-  GRID: 0x424242,               // Grey 800 (ground plane)
+  // UI accents - black and white
+  LABEL_TEXT: 0xFFFFFF,         // White (labels)
+  MEASUREMENT_LINES: 0x808080,  // Gray (dimensions)
+  GRID: 0x404040,               // Dark gray (ground plane)
 } as const;
 
 /**

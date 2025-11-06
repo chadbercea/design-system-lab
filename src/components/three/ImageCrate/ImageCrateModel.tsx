@@ -16,7 +16,7 @@
 
 'use client';
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -28,39 +28,67 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
   onAnimationComplete,
   scale = 1,
   showLogo = true,
-  color = '#0db7ed', // Docker blue
+  color = '#808080', // Gray
   enableGlow = false,
   imageName = 'nginx:latest',
   showLoadingText = false,
 }) => {
   const groupRef = useImageCrateAnimation(state, onAnimationComplete);
   const wireframeRef = useRef<THREE.LineSegments>(null);
+  const [logoTexture, setLogoTexture] = useState<THREE.Texture | null>(null);
 
   // Show loading text during entering and docking states
   const shouldShowText = showLoadingText && (state === 'entering' || state === 'docking');
 
-  // Create main crate material - Docker blue
+  // Load Docker logo texture from SVG via canvas
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'transparent';
+        ctx.fillRect(0, 0, 512, 512);
+        // Draw the image centered
+        const size = 400;
+        const offset = (512 - size) / 2;
+        ctx.drawImage(img, offset, offset, size, size);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        setLogoTexture(texture);
+      }
+    };
+    img.src = '/docker-logo.svg';
+  }, []);
+
+  // Create main crate material - Gray
   const crateMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
-      color: 0x1d63ed, // Docker blue - always visible
+      color: 0x808080, // Gray - always visible
     });
   }, []);
 
-  // Create logo material (Docker whale on front face)
+  // Create logo material using the loaded texture
   const logoMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#ffffff', // White logo
-      roughness: 0.3,
-      metalness: 0.2,
-      emissive: '#ffffff',
-      emissiveIntensity: 0.1,
+    if (!logoTexture) {
+      return new THREE.MeshBasicMaterial({
+        color: '#404040',
+      });
+    }
+    return new THREE.MeshBasicMaterial({
+      map: logoTexture,
+      transparent: true,
     });
-  }, []);
+  }, [logoTexture]);
 
-  // Create edge material for rounded corners - Docker blue (darker)
+  // Create edge material for rounded corners - Dark gray
   const edgeMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
-      color: 0x1850c0,
+      color: 0x404040,
     });
   }, []);
 
@@ -122,53 +150,18 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
         <primitive object={edgeMaterial} attach="material" />
       </mesh>
 
-      {/* Docker logo on front face (simplified whale shape) */}
-      {showLogo && (
-        <group position={[0, 0, 2.01]} scale={3.0}>
-          {/* Logo background plane */}
-          <mesh castShadow>
-            <planeGeometry args={[0.65, 0.48]} />
-            <meshStandardMaterial color="#0995ba" roughness={0.5} metalness={0.1} />
-          </mesh>
-
-          {/* Simplified Docker whale - body */}
-          <mesh position={[0, -0.05, 0.01]}>
-            <boxGeometry args={[0.4, 0.15, 0.01]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-
-          {/* Docker whale - head */}
-          <mesh position={[0.15, 0.0, 0.01]}>
-            <boxGeometry args={[0.15, 0.12, 0.01]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-
-          {/* Docker whale - containers on back (3 small boxes) */}
-          <mesh position={[-0.15, 0.08, 0.01]}>
-            <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-          <mesh position={[-0.05, 0.08, 0.01]}>
-            <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-          <mesh position={[0.05, 0.08, 0.01]}>
-            <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-
-          {/* Wave underneath */}
-          <mesh position={[0, -0.18, 0.01]}>
-            <planeGeometry args={[0.5, 0.05]} />
-            <primitive object={logoMaterial} attach="material" />
-          </mesh>
-        </group>
+      {/* Docker logo on front face */}
+      {showLogo && logoTexture && (
+        <mesh position={[0, 0, 2.01]}>
+          <planeGeometry args={[2.0, 2.0]} />
+          <primitive object={logoMaterial} attach="material" />
+        </mesh>
       )}
 
       {/* Panel lines (subtle recessed lines) */}
       <lineSegments position={[0, 0, 0.41]}>
         <edgesGeometry args={[new THREE.PlaneGeometry(0.7, 0.5)]} />
-        <lineBasicMaterial color="#0995ba" opacity={0.3} transparent />
+        <lineBasicMaterial color="#808080" opacity={0.3} transparent />
       </lineSegments>
 
       {/* Optional glow effect */}
@@ -198,17 +191,17 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
         >
           <div
             style={{
-              background: 'rgba(13, 183, 237, 0.15)',
+              background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(12px)',
-              border: '1.5px solid rgba(13, 183, 237, 0.5)',
+              border: '1.5px solid rgba(255, 255, 255, 0.3)',
               borderRadius: '12px',
               padding: '14px 28px',
-              color: '#64B5F6',
+              color: '#ffffff',
               fontSize: '16px',
               fontWeight: '600',
               whiteSpace: 'nowrap',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              boxShadow: '0 8px 32px rgba(13, 183, 237, 0.2)',
+              fontFamily: '"Fira Code", "Courier New", monospace',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             }}
           >
