@@ -4,11 +4,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  basePath: '/design-system-lab/docker-desktop-remix',
-  assetPrefix: '/design-system-lab/docker-desktop-remix',
+  basePath: '/docker-desktop-remix',
+  assetPrefix: '/docker-desktop-remix',
   images: {
     unoptimized: true,
   },
+  trailingSlash: true,
 };
 
 export default withSentryConfig(nextConfig, {
