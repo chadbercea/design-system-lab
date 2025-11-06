@@ -8,7 +8,7 @@ import { fetchImages } from '@/lib/mock-docker-api';
 import { SAMPLE_IMAGE } from '@/lib/fixtures/docker-images';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import DemoOAuthFlow from '@/components/auth/DemoOAuthFlow';
 
 export function LeftPanel() {
@@ -303,9 +303,17 @@ export function LeftPanel() {
         <Button
           onClick={handleRun}
           disabled={!selectedImageId}
-          className="w-full bg-zinc-600 hover:bg-zinc-700 text-white disabled:opacity-50 text-xs h-8"
+          className="w-full bg-zinc-600 hover:bg-zinc-700 text-white disabled:opacity-50 text-xs h-8 relative overflow-hidden group"
         >
-          Run
+          <span className="flex items-center justify-center gap-2">
+            Run
+            {selectedImageId && (
+              <ArrowRight
+                className="h-4 w-4 animate-[slide-right_1.5s_ease-in-out_infinite]"
+                strokeWidth={2.5}
+              />
+            )}
+          </span>
         </Button>
       </div>
     </div>
