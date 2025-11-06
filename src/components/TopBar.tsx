@@ -5,6 +5,7 @@ import { useAppState } from '@/lib/app-state-context';
 import { Badge } from '@/components/ui/badge';
 import { createStatsStream } from '@/lib/mock-docker-api';
 import { ContainerStats } from '@/types/docker';
+import { DemoLimitsModal } from '@/components/DemoLimitsModal';
 
 interface TopBarProps {
   onTerminalToggle?: () => void;
@@ -14,6 +15,7 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
   const { selectedImage, containerStatus, config } = useAppState();
   const [stats, setStats] = useState<ContainerStats | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showDemoLimits, setShowDemoLimits] = useState(false);
 
   // Stream real-time stats when container is running
   useEffect(() => {
@@ -37,6 +39,11 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
   const toggleMenu = (menu: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveMenu(activeMenu === menu ? null : menu);
+  };
+
+  const handleDemoLimitClick = () => {
+    setActiveMenu(null);
+    setShowDemoLimits(true);
   };
 
   const cpuPercent = stats?.cpuPercent || 0;
@@ -107,14 +114,23 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
             </button>
             {activeMenu === 'file' && (
               <div className="absolute top-full left-0 mt-1 w-48 bg-black border border-zinc-700 rounded shadow-lg z-50">
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   New Container
                 </button>
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Import Image
                 </button>
                 <div className="border-t border-zinc-800 my-1" />
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Settings
                 </button>
               </div>
@@ -140,10 +156,16 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
                 >
                   Toggle Terminal
                 </button>
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Container Logs
                 </button>
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Performance Stats
                 </button>
               </div>
@@ -160,14 +182,23 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
             </button>
             {activeMenu === 'help' && (
               <div className="absolute top-full left-0 mt-1 w-48 bg-black border border-zinc-700 rounded shadow-lg z-50">
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Documentation
                 </button>
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   Keyboard Shortcuts
                 </button>
                 <div className="border-t border-zinc-800 my-1" />
-                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                <button
+                  onClick={handleDemoLimitClick}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
                   About Docker Desktop
                 </button>
               </div>
@@ -242,6 +273,12 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
           )}
         </div>
       </div>
+
+      {/* Demo Limits Modal */}
+      <DemoLimitsModal
+        isOpen={showDemoLimits}
+        onClose={() => setShowDemoLimits(false)}
+      />
     </div>
   );
 }
