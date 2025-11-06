@@ -267,6 +267,17 @@ NEXT_PUBLIC_BASE_PATH=/design-system-lab
 - ESLint
 - PostCSS
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get up and running fast
+- **[Authentication Guide](docs/AUTH_QUICK_START.md)** - Docker Hub OAuth demo setup
+- **[Container State System](docs/CONTAINER_STATE_SYSTEM.md)** - State machine documentation
+- **[Design System](docs/design-system/README.md)** - Visual style guides and implementation
+- **[Storyboard](docs/storyboard/README.md)** - Animation sequences and visual references
+- **[Full Documentation Index](docs/README.md)** - Complete documentation catalog
+
 ## 🎓 Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
