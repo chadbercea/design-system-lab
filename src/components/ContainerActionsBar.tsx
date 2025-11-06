@@ -118,6 +118,8 @@ export function ContainerActionsBar({ isTerminalOpen }: ContainerActionsBarProps
           Delete
         </Button>
 
+        <div className="h-4 w-px bg-zinc-700 mx-1" />
+
         <Button
           variant="ghost"
           size="sm"
