@@ -22,7 +22,7 @@ export function SidePanel() {
   }, [containerStatus, setActiveTab]);
 
   return (
-    <div className="fixed right-5 top-[80px] bottom-[60px] w-[253px] bg-black border border-black flex flex-col z-30">
+    <div className="fixed right-5 top-[80px] bottom-[60px] w-[253px] bg-black/80 backdrop-blur-sm border border-black flex flex-col z-30">
       {/* Header */}
       <div className="px-4 py-3 border-b border-black flex-shrink-0">
         <h2 className="text-sm font-semibold text-zinc-100">Container Details</h2>

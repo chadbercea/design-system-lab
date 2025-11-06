@@ -60,7 +60,7 @@ export function BottomBar({ isOpen, onClose }: BottomBarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-[300px] flex-col border-t border-zinc-700 bg-black shadow-2xl animate-in slide-in-from-bottom duration-300">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-[300px] flex-col border-t border-zinc-700 bg-black/80 backdrop-blur-sm shadow-2xl animate-in slide-in-from-bottom duration-300">
       {/* Terminal header */}
       <div className="flex h-[30px] items-center justify-between border-b border-zinc-800 px-4">
         <div className="flex items-center gap-2">

@@ -9,9 +9,10 @@ import { Canvas3D } from '@/components/Canvas3D';
 import { SidePanel } from '@/components/SidePanel';
 import { LeftPanel } from '@/components/LeftPanel';
 import { EmptyState } from '@/components/EmptyState';
+import { MetricsOverlay } from '@/components/MetricsOverlay';
 
 function AppContent() {
-  const { selectedImage } = useAppState();
+  const { selectedImage, containerStatus } = useAppState();
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
   return (
@@ -22,7 +23,7 @@ function AppContent() {
         <TopBar onTerminalToggle={() => setIsTerminalOpen(!isTerminalOpen)} />
 
         {/* Main content area */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
           {/* Canvas3D or EmptyState - full width to render behind panels */}
           <div className="flex flex-1">
             {selectedImage ? (
@@ -31,6 +32,9 @@ function AppContent() {
               <EmptyState />
             )}
           </div>
+
+          {/* Metrics overlay - shows when container is running */}
+          <MetricsOverlay show={containerStatus === 'running'} />
         </div>
       </div>
 
