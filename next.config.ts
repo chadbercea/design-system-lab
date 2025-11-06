@@ -4,8 +4,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  basePath: '/docker-desktop-remix',
-  assetPrefix: '/docker-desktop-remix',
+  basePath: '/design-system-lab/docker-desktop-remix',
+  assetPrefix: '/design-system-lab/docker-desktop-remix',
   images: {
     unoptimized: true,
   },
