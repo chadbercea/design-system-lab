@@ -72,8 +72,8 @@ export const useImageCrateAnimation = (
 
     switch (state) {
       case 'entering': {
-        // Phase 1: Fly in from off-screen with dramatic arc (6 seconds of 10s total)
-        const duration = 6.0;
+        // Phase 1: Fly in from off-screen with dramatic arc (3 seconds - 2x faster)
+        const duration = 3.0;
         const progress = Math.min(elapsedTime / duration, 1);
         const arcProgress = easeInOutCubic(progress);
 
@@ -101,14 +101,12 @@ export const useImageCrateAnimation = (
       }
 
       case 'docking': {
-        // Phase 2: Enter through container opening and dock inside (4 seconds of 10s total)
-        const duration = 4.0;
+        // Phase 2: Enter through container opening and dock inside - smooth entry
+        const duration = 2.0;
         const progress = Math.min(elapsedTime / duration, 1);
 
-        // Custom easing: ease-in-out with deceleration at end for "thunk" feel
-        const eased = progress < 0.7
-          ? easeInOutCubic(progress / 0.7) * 0.7 // 70% of animation is smooth movement
-          : 0.7 + easeOutBounce((progress - 0.7) / 0.3) * 0.3; // Last 30% is settling with bounce
+        // Smooth ease-in-out - no bounce
+        const eased = easeInOutCubic(progress);
 
         // Start: in front of container entrance (beyond door position)
         const startPos: CratePosition = { x: 0, y: CONTAINER.CENTER_Y, z: CONTAINER.ENTRANCE_Z + 2 };
@@ -123,14 +121,8 @@ export const useImageCrateAnimation = (
         group.rotation.y = 0;
         group.rotation.z = 0;
 
-        // "Thunk" effect: slight scale bounce when settling
-        if (progress > 0.85) {
-          const thunkProgress = (progress - 0.85) / 0.15;
-          const bounce = 1 - Math.abs(Math.sin(thunkProgress * Math.PI * 2)) * 0.05;
-          group.scale.setScalar(bounce);
-        } else {
-          group.scale.setScalar(1);
-        }
+        // No bounce - smooth entry
+        group.scale.setScalar(1);
 
         if (progress >= 1 && onAnimationComplete) {
           onAnimationComplete('settled');

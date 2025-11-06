@@ -8,12 +8,14 @@ import type { ContainerState } from '@/lib/container-colors';
 import { CONTAINER_COLORS, getBuildingPulseOpacity } from '@/lib/container-colors';
 import { ImageCrateModel } from './ImageCrate/ImageCrateModel';
 import { ContainerDoors } from './ContainerDoors';
+import { useAppState } from '@/lib/app-state-context';
 
 interface Container3DProps {
   state?: ContainerState;
 }
 
 export function Container3D({ state = 'ready' }: Container3DProps) {
+  const { setCameraPhase } = useAppState();
   const containerRef = useRef<THREE.Group>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const glowMeshRef = useRef<THREE.Mesh>(null);
@@ -47,10 +49,23 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [cameraRotationStart, setCameraRotationStart] = useState<number | null>(null);
   const [cameraRotationComplete, setCameraRotationComplete] = useState(false);
 
+  // Container rotation to running state - smooth rotation to expose right wall
+  const [containerRotationStart, setContainerRotationStart] = useState<number | null>(null);
+  const [containerRotationComplete, setContainerRotationComplete] = useState(false);
+  const [targetRotation, setTargetRotation] = useState(0);
+
   // Terminal text animation state
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [terminalStart, setTerminalStart] = useState<number | null>(null);
   const [terminalCharCount, setTerminalCharCount] = useState(0);
+
+  // Shipping label text animation state (right wall)
+  const [shippingLabelLines, setShippingLabelLines] = useState<string[]>([]);
+  const [shippingLabelStart, setShippingLabelStart] = useState<number | null>(null);
+
+  // Canvas texture for shipping label
+  const shippingLabelTextureRef = useRef<THREE.CanvasTexture | null>(null);
+  const shippingLabelCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Running state animation
   const [runningFadeStart, setRunningFadeStart] = useState<number | null>(null);
@@ -58,11 +73,11 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   // Error state animation
   const [errorCameraStart, setErrorCameraStart] = useState<number | null>(null);
 
-  // Wall material - invisible in building/ready, docker blue in running, white in error
+  // Wall material - invisible in building/ready, BLACK in running, white in error
   const wallMaterial = useMemo(() => {
     let color: number = CONTAINER_COLORS.WALL_SURFACE;
     if (state === 'running') {
-      color = 0x1d63ed as number; // Docker blue
+      color = 0x000000 as number; // Black - stay black, no fade to blue
     }
 
     return new THREE.MeshBasicMaterial({
@@ -138,6 +153,23 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
     }
   });
 
+  // Create canvas texture for shipping label
+  useEffect(() => {
+    if (state !== 'running') return;
+
+    // Create canvas for right wall (height 5, width 6)
+    if (!shippingLabelCanvasRef.current) {
+      shippingLabelCanvasRef.current = document.createElement('canvas');
+      shippingLabelCanvasRef.current.width = 1200;
+      shippingLabelCanvasRef.current.height = 1000; // Match wall aspect ratio
+    }
+
+    // Create texture on first render
+    if (!shippingLabelTextureRef.current && shippingLabelCanvasRef.current) {
+      shippingLabelTextureRef.current = new THREE.CanvasTexture(shippingLabelCanvasRef.current);
+    }
+  }, [state]);
+
   // Reset state when switching to building
   useEffect(() => {
     if (state === 'building') {
@@ -159,11 +191,18 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorCloseTriggered(false);
       setTerminalLines([]);
       setTerminalStart(null);
+      setShippingLabelLines([]);
+      setShippingLabelStart(null);
       setCameraRotationStart(null);
       setCameraRotationComplete(false);
+      setContainerRotationStart(null);
+      setContainerRotationComplete(false);
+      setTargetRotation(0);
       dottedWireframeMaterial.opacity = 0.7;
       solidWireframeMaterial.opacity = 1.0;
       solidWireframeMaterial.transparent = false;
+      // Camera: Move to 45° off left door to see crate entering
+      setCameraPhase('buildStart');
     } else if (state === 'ready') {
       // Ready state: same as building but doors closed
       setUsesDottedMaterial(true);
@@ -171,13 +210,21 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('closed');
       setIdleAnimationStart(null);
       dottedWireframeMaterial.opacity = 1.0;
+      // Camera: Return to default free roam
+      setCameraPhase('default');
     } else if (state === 'running') {
-      // Running state: fade from black to blue, auto rotate
+      // Running state: fade from black to blue, start container rotation
       setUsesDottedMaterial(false);
       setCrateState('floating');
       setDoorState('closed');
       setIdleAnimationStart(null);
       setRunningFadeStart(Date.now());
+      // Start container rotation animation to expose right wall
+      setContainerRotationStart(Date.now());
+      setContainerRotationComplete(false);
+      // Target rotation: -45° (Math.PI / 4) to expose right wall
+      setTargetRotation(-Math.PI / 4);
+      // Camera will move after rotation completes
     } else if (state === 'error') {
       // Error state: camera rotates to door side, doors open with black fill
       setUsesDottedMaterial(false);
@@ -185,13 +232,16 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       setDoorState('open');
       setIdleAnimationStart(null);
       setErrorCameraStart(Date.now());
+      // Camera: Error state uses default
+      setCameraPhase('default');
     } else {
       setUsesDottedMaterial(false);
       setCrateState('floating');
       setDoorState('closed');
       setIdleAnimationStart(null);
+      setCameraPhase('default');
     }
-  }, [state, dottedWireframeMaterial, solidWireframeMaterial]);
+  }, [state, dottedWireframeMaterial, solidWireframeMaterial, setCameraPhase]);
 
   // Animation loop
   useFrame((frameState) => {
@@ -212,8 +262,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
       // Sequential wall fade-in animation
       if (wallFadeStart !== null) {
         const elapsed = (Date.now() - wallFadeStart) / 1000;
-        const fadeDuration = 0.6; // Each wall fades in over 0.6 seconds
-        const delayBetween = 0.2; // 0.2 second delay between each wall
+        const fadeDuration = 0.3; // Each wall fades in over 0.3 seconds (2x faster)
+        const delayBetween = 0.1; // 0.1 second delay between each wall (2x faster)
 
         // Back wall (starts immediately)
         const backProgress = Math.min(Math.max((elapsed - 0) / fadeDuration, 0), 1);
@@ -243,33 +293,12 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           setIsTransitioning(true);
           setTransitionStart(Date.now());
           setDoorCloseTriggered(true);
+          // Camera: Move to front view of doors to watch them close
+          setCameraPhase('doorsClosing');
         }
       }
 
-      // Camera rotation starts after doors close
-      if (doorState === 'closed' && !cameraRotationComplete && cameraRotationStart === null) {
-        setCameraRotationStart(Date.now());
-      }
-
-      if (cameraRotationStart !== null && !cameraRotationComplete) {
-        const elapsed = (Date.now() - cameraRotationStart) / 1000;
-        const rotationDuration = 1.0; // 1 second rotation
-        const progress = Math.min(elapsed / rotationDuration, 1.0);
-
-        // Ease out cubic
-        const eased = 1 - Math.pow(1 - progress, 3);
-
-        // Rotate container to the RIGHT to show right side panel (negative rotation)
-        // -45 degrees to show the RIGHT side from outside
-        const targetRotation = -(Math.PI / 4);
-        if (containerRef.current) {
-          containerRef.current.rotation.y = eased * targetRotation;
-        }
-
-        if (progress >= 1.0 && !cameraRotationComplete) {
-          setCameraRotationComplete(true);
-        }
-      }
+      // No camera rotation during building - keep container front-facing so user can see terminal text on doors
 
       // Terminal text animation - types characters sequentially
       if (terminalStart !== null) {
@@ -317,32 +346,141 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
 
       // No idle animations after choreography completes
     } else if (state === 'running') {
-      // Running state: slow auto-rotation
+      // Running state: smooth rotation to expose right wall, then STOP at 45°
       if (containerRef.current) {
-        containerRef.current.rotation.y = elapsed * 0.1; // Slow rotation
+        // Smooth rotation from front (0°) to right wall exposed (-45°)
+        if (containerRotationStart !== null && !containerRotationComplete) {
+          const rotationElapsed = (Date.now() - containerRotationStart) / 1000;
+          const rotationDuration = 1.5; // 1.5 second smooth rotation
+          const rotationProgress = Math.min(rotationElapsed / rotationDuration, 1.0);
+
+          // Ease out cubic for smooth deceleration
+          const eased = 1 - Math.pow(1 - rotationProgress, 3);
+
+          // Interpolate from 0 to targetRotation (-π/4)
+          const startRotation = 0;
+          containerRef.current.rotation.y = startRotation + (targetRotation - startRotation) * eased;
+
+          // Mark rotation complete and trigger camera move + shipping label
+          if (rotationProgress >= 1.0) {
+            setContainerRotationComplete(true);
+            // Lock rotation at target angle
+            containerRef.current.rotation.y = targetRotation;
+            // Now move camera to right 45° angle
+            setCameraPhase('runningRotate');
+            // Start shipping label text animation
+            if (shippingLabelStart === null) {
+              setShippingLabelStart(Date.now());
+            }
+          }
+        }
+        // After rotation complete, HOLD at 45° (no continuous rotation)
+        else if (containerRotationComplete) {
+          containerRef.current.rotation.y = targetRotation;
+        }
+
         containerRef.current.scale.setScalar(1.0);
       }
 
-      // Fade COLOR from black to blue
-      if (runningFadeStart !== null) {
-        const fadeElapsed = (Date.now() - runningFadeStart) / 1000;
-        const fadeDuration = 2.0; // 2 seconds fade
-        const fadeProgress = Math.min(fadeElapsed / fadeDuration, 1.0);
+      // Keep walls BLACK - no color fade
+      wallMaterial.color.setHex(0x000000);
+      wallMaterial.opacity = 1.0;
+      wallMaterial.needsUpdate = true;
 
-        // Ease out cubic
-        const eased = 1 - Math.pow(1 - fadeProgress, 3);
+      // Shipping label text animation on right wall
+      if (shippingLabelStart !== null) {
+        const elapsed = (Date.now() - shippingLabelStart) / 1000;
+        const charsPerSecond = 30; // Same speed as terminal
 
-        // Interpolate color from black (0x000000) to blue (0x1d63ed)
-        const blackR = 0, blackG = 0, blackB = 0;
-        const blueR = 0x1d, blueG = 0x63, blueB = 0xed;
+        // Structure: title + label/value pairs matching Figma design
+        const title = 'nginx : latest';
+        const labelValuePairs = [
+          { label: 'Status:', value: 'Running' },
+          { label: 'Ports:', value: '80:8080/tcp' },
+          { label: 'Network:', value: 'bridge' },
+          { label: 'Created:', value: '2025-11-05' },
+          { label: 'Platform:', value: 'linux/amd64' },
+        ];
 
-        const r = Math.round(blackR + (blueR - blackR) * eased);
-        const g = Math.round(blackG + (blueG - blackG) * eased);
-        const b = Math.round(blackB + (blueB - blackB) * eased);
+        // Calculate typing animation progress
+        const totalChars = title.length + labelValuePairs.reduce((sum, pair) =>
+          sum + pair.label.length + pair.value.length, 0);
+        const targetCharCount = Math.min(Math.floor(elapsed * charsPerSecond), totalChars);
 
-        wallMaterial.color.setHex((r << 16) | (g << 8) | b);
-        wallMaterial.opacity = 1.0; // Keep fully opaque
-        wallMaterial.needsUpdate = true;
+        // Determine what should be visible
+        let charsRemaining = targetCharCount;
+        let visibleTitle = '';
+        const visiblePairs: Array<{label: string; value: string}> = [];
+
+        // Title first
+        if (charsRemaining > 0) {
+          visibleTitle = title.substring(0, Math.min(charsRemaining, title.length));
+          charsRemaining -= visibleTitle.length;
+        }
+
+        // Then label/value pairs
+        for (const pair of labelValuePairs) {
+          if (charsRemaining <= 0) break;
+
+          let visibleLabel = '';
+          let visibleValue = '';
+
+          // Show label first
+          if (charsRemaining > 0) {
+            visibleLabel = pair.label.substring(0, Math.min(charsRemaining, pair.label.length));
+            charsRemaining -= visibleLabel.length;
+          }
+
+          // Then show value
+          if (charsRemaining > 0 && visibleLabel.length === pair.label.length) {
+            visibleValue = pair.value.substring(0, Math.min(charsRemaining, pair.value.length));
+            charsRemaining -= visibleValue.length;
+          }
+
+          if (visibleLabel.length > 0) {
+            visiblePairs.push({ label: visibleLabel, value: visibleValue });
+          }
+        }
+
+        // Update canvas texture
+        const canvas = shippingLabelCanvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx) {
+          // Clear canvas
+          ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Draw title - large size, aligned to upper left
+          if (visibleTitle.length > 0) {
+            ctx.fillStyle = '#b3b3b3'; // Gray per Figma
+            ctx.font = 'bold 120px Inter, Arial, sans-serif';
+            ctx.textBaseline = 'top';
+            ctx.fillText(visibleTitle, 50, 50);
+          }
+
+          // Draw label/value pairs - large size to fill green box
+          if (visiblePairs.length > 0) {
+            ctx.fillStyle = '#b3b3b3';
+            ctx.font = '60px Inter, Arial, sans-serif';
+
+            const startY = 230; // Below title
+            const lineHeight = 90; // Proportional spacing
+            const labelX = 50;
+            const valueX = 450; // Offset for value column
+
+            visiblePairs.forEach((pair, index) => {
+              const y = startY + index * lineHeight;
+              ctx.fillText(pair.label, labelX, y);
+              if (pair.value.length > 0) {
+                ctx.fillText(pair.value, valueX, y);
+              }
+            });
+          }
+
+          if (shippingLabelTextureRef.current) {
+            shippingLabelTextureRef.current.needsUpdate = true;
+          }
+        }
       }
     } else if (state === 'error') {
       // Error state: rotate container to show door side
@@ -490,6 +628,8 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
           // Start terminal text when doors finish closing
           if (state === 'building' && terminalStart === null) {
             setTerminalStart(Date.now());
+            // Camera: Hold front view to watch terminal text on left door
+            setCameraPhase('terminal');
           }
         }}
       />
@@ -535,6 +675,14 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
             Building container...
           </div>
         </Html>
+      )}
+
+      {/* Shipping label on right wall - canvas texture applied to wall surface */}
+      {state === 'running' && shippingLabelStart !== null && shippingLabelTextureRef.current && (
+        <mesh position={[3.01, 3.5, 2]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[4, 3]} />
+          <meshBasicMaterial map={shippingLabelTextureRef.current} transparent side={THREE.DoubleSide} />
+        </mesh>
       )}
 
       {/* Ground plane - hidden */}

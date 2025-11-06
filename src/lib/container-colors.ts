@@ -8,13 +8,19 @@
  */
 
 export const CONTAINER_COLORS = {
-  // State colors
-  BUILDING: 0x2196F3,           // Electric blue (primary)
+  // State colors - Updated for ILI-144 PRD
+  IDLE: 0xFFFFFF,               // White wireframe (30% opacity)
+  BUILDING_START: 0x1e3a8a,     // Blue-900 (start of building)
+  BUILDING_END: 0x1a2332,       // Dark blue (end of building)
+  RUNNING: 0x1a2332,            // Dark blue solid (running state)
+  ERROR: 0xdc2626,              // Red-600 (error state)
+  STOPPED: 0x6b7280,            // Gray-500 (stopped state)
+
+  // Legacy state colors (kept for compatibility)
+  BUILDING: 0x1e3a8a,           // Blue-900 (building)
   BUILDING_PULSE: 0x64B5F6,     // Light electric blue (pulse peak)
   READY: 0x90CAF9,              // Soft blue (idle state)
-  RUNNING: 0x4CAF50,            // Success green (active)
   RUNNING_ACCENT: 0x66BB6A,     // Light green (highlights)
-  ERROR: 0xF44336,              // Alert red (failed state)
 
   // Structural colors
   WIREFRAME_PRIMARY: 0x37474F,  // Blue-grey 800 (main edges)
@@ -44,9 +50,15 @@ export const CONTAINER_COLORS = {
 } as const;
 
 /**
- * Container state types
+ * Container state types - Updated for ILI-144
+ *
+ * idle: Wireframe appearance, white lines, slow float, doors open
+ * building: Blue wireframe → solid, doors closing, terminal text
+ * running: Dark blue solid, auto-orbit, terminal text visible
+ * error: Doors spring open, red wireframe, pulsing glow
+ * stopped: Semi-transparent 50%, gray, no movement
  */
-export type ContainerState = 'building' | 'ready' | 'running' | 'error';
+export type ContainerState = 'idle' | 'building' | 'running' | 'error' | 'stopped' | 'ready';
 
 /**
  * Get the primary color for a given container state
@@ -56,14 +68,18 @@ export type ContainerState = 'building' | 'ready' | 'running' | 'error';
  */
 export function getStateColor(state: ContainerState): number {
   switch (state) {
+    case 'idle':
+      return CONTAINER_COLORS.IDLE;
     case 'building':
-      return CONTAINER_COLORS.BUILDING;
-    case 'ready':
-      return CONTAINER_COLORS.READY;
+      return CONTAINER_COLORS.BUILDING_START;
     case 'running':
       return CONTAINER_COLORS.RUNNING;
     case 'error':
       return CONTAINER_COLORS.ERROR;
+    case 'stopped':
+      return CONTAINER_COLORS.STOPPED;
+    case 'ready':
+      return CONTAINER_COLORS.READY;
   }
 }
 
@@ -76,14 +92,18 @@ export function getStateColor(state: ContainerState): number {
  */
 export function getStateAccentColor(state: ContainerState): number {
   switch (state) {
+    case 'idle':
+      return CONTAINER_COLORS.IDLE;
     case 'building':
       return CONTAINER_COLORS.BUILDING_PULSE;
-    case 'ready':
-      return CONTAINER_COLORS.READY;
     case 'running':
       return CONTAINER_COLORS.RUNNING_ACCENT;
     case 'error':
       return CONTAINER_COLORS.ERROR;
+    case 'stopped':
+      return CONTAINER_COLORS.STOPPED;
+    case 'ready':
+      return CONTAINER_COLORS.READY;
   }
 }
 
