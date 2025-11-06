@@ -50,23 +50,21 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
-      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm font-mono">
+      <div className="bg-black/80 backdrop-blur-sm border border-zinc-700 rounded-lg shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+        <div className="bg-black/60 border-b border-zinc-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🐳</span>
-              </div>
+              <img src="/docker-logo.svg" alt="Docker" className="w-10 h-10" />
               <div>
                 <h2 className="text-white font-semibold text-lg">Docker Hub</h2>
-                <p className="text-blue-100 text-xs">OAuth Authorization</p>
+                <p className="text-zinc-400 text-xs">OAuth Authorization</p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="text-white hover:text-blue-100 transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -76,9 +74,9 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1 bg-gray-200">
+        <div className="h-1 bg-zinc-800">
           <div
-            className="h-full bg-blue-600 transition-all duration-300 ease-out"
+            className="h-full bg-cyan-500 transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -88,40 +86,40 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
           {step === 'redirect' && (
             <div className="text-center">
               <div className="mb-4 flex justify-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-500"></div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Redirecting to Docker Hub...</h3>
-              <p className="text-gray-600">Opening secure authentication window</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Redirecting to Docker Hub...</h3>
+              <p className="text-zinc-400">Opening secure authentication window</p>
             </div>
           )}
 
           {step === 'docker-hub' && (
             <div className="space-y-4">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign in to Docker Hub</h3>
-                <p className="text-gray-600 text-sm">This is a simulation of the Docker Hub login page</p>
+                <h3 className="text-xl font-semibold text-white mb-2">Sign in to Docker Hub</h3>
+                <p className="text-zinc-400 text-sm">This is a simulation of the Docker Hub login page</p>
               </div>
 
               {/* Simulated Login Form */}
-              <div className="space-y-3 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="space-y-3 bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-zinc-300 mb-1">
                     Docker ID or Email
                   </label>
-                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-                    <span className="text-gray-400">demo-user@example.com</span>
+                  <div className="w-full px-3 py-2 border border-zinc-700 rounded-md bg-black/40">
+                    <span className="text-zinc-500">demo-user@example.com</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-zinc-300 mb-1">
                     Password
                   </label>
-                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-                    <span className="text-gray-400">••••••••</span>
+                  <div className="w-full px-3 py-2 border border-zinc-700 rounded-md bg-black/40">
+                    <span className="text-zinc-500">••••••••</span>
                   </div>
                 </div>
                 <div className="pt-2">
-                  <div className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-center font-medium">
+                  <div className="w-full px-4 py-2 bg-cyan-600 text-white rounded-md text-center font-medium">
                     Signing in...
                   </div>
                 </div>
@@ -132,39 +130,37 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
           {step === 'consent' && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Authorize Application</h3>
-                <p className="text-gray-600 text-sm">Grant access to your Docker Hub account</p>
+                <h3 className="text-xl font-semibold text-white mb-2">Authorize Application</h3>
+                <p className="text-zinc-400 text-sm">Grant access to your Docker Hub account</p>
               </div>
 
               {/* App Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <div className="bg-zinc-900/50 border border-zinc-700 rounded-lg p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">A</span>
-                  </div>
+                  <img src="/docker-logo.svg" alt="Docker" className="w-12 h-12" />
                   <div>
-                    <p className="font-semibold text-gray-900">Your Application</p>
-                    <p className="text-sm text-gray-600">wants to access your Docker Hub account</p>
+                    <p className="font-semibold text-white">Your Application</p>
+                    <p className="text-sm text-zinc-400">wants to access your Docker Hub account</p>
                   </div>
                 </div>
 
-                <div className="border-t border-blue-200 pt-3 space-y-2">
-                  <p className="text-sm font-medium text-gray-900">This app will be able to:</p>
-                  <ul className="space-y-1 text-sm text-gray-700">
+                <div className="border-t border-zinc-700 pt-3 space-y-2">
+                  <p className="text-sm font-medium text-white">This app will be able to:</p>
+                  <ul className="space-y-1 text-sm text-zinc-300">
                     <li className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       Read your profile information
                     </li>
                     <li className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       Access your repositories
                     </li>
                     <li className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       Pull and push images
@@ -174,10 +170,10 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md font-medium">
+                <button className="flex-1 px-4 py-2 bg-zinc-800 text-zinc-300 rounded-md font-medium border border-zinc-700">
                   Cancel
                 </button>
-                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md font-medium">
+                <button className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-md font-medium">
                   Authorizing...
                 </button>
               </div>
@@ -188,34 +184,34 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
             <div className="text-center">
               <div className="mb-4 flex justify-center">
                 <div className="animate-pulse">
-                  <svg className="w-16 h-16 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-16 h-16 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Authorization Successful</h3>
-              <p className="text-gray-600">Returning to application...</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Authorization Successful</h3>
+              <p className="text-zinc-400">Returning to application...</p>
             </div>
           )}
 
           {step === 'success' && (
             <div className="text-center">
               <div className="mb-4 flex justify-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Connected!</h3>
-              <p className="text-gray-600">Your Docker Hub account is now connected</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Connected!</h3>
+              <p className="text-zinc-400">Your Docker Hub account is now connected</p>
             </div>
           )}
         </div>
 
         {/* Demo Badge */}
-        <div className="bg-yellow-50 border-t border-yellow-200 px-6 py-3">
-          <div className="flex items-center gap-2 text-sm text-yellow-800">
+        <div className="bg-zinc-900/50 border-t border-zinc-700 px-6 py-3">
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
