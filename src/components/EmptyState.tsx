@@ -35,8 +35,10 @@ function ResizeHandler() {
 
   useEffect(() => {
     const handleResize = () => {
-      camera.aspect = gl.domElement.width / gl.domElement.height;
-      camera.updateProjectionMatrix();
+      if ('aspect' in camera) {
+        camera.aspect = gl.domElement.width / gl.domElement.height;
+        camera.updateProjectionMatrix();
+      }
     };
 
     window.addEventListener('resize', handleResize);
