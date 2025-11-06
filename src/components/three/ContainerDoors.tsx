@@ -113,7 +113,7 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
         color = 0x000000 as number; // Black for error state
         opacity = 1.0; // Doors filled black in error state
       } else if (containerState === 'running') {
-        color = 0x1a2845 as number; // Dark navy blue to match walls
+        color = 0x000000 as number; // BLACK to match walls
       } else if (state === 'open' || containerState === 'ready') {
         opacity = 0.0;
       }
@@ -132,7 +132,16 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
   const hingeMataterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: 0xFFFFFF,
+        color: 0x000000, // Black
+      }),
+    []
+  )
+
+  const hingeOutlineMaterial = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: 0xFFFFFF, // White outline
+        linewidth: 2,
       }),
     []
   )
@@ -255,13 +264,16 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
 
         {/* Hinges */}
         {[0, 1, 2].map((i) => (
-          <mesh
-            key={`left-hinge-${i}`}
-            position={[0, -DOOR.height / 2 + (i + 0.5) * (DOOR.height / 3), DOOR.depth / 2 + 0.05]}
-          >
-            <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
-            <primitive object={hingeMataterial} attach="material" />
-          </mesh>
+          <group key={`left-hinge-${i}`} position={[0, -DOOR.height / 2 + (i + 0.5) * (DOOR.height / 3), DOOR.depth / 2 + 0.05]}>
+            <mesh>
+              <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
+              <primitive object={hingeMataterial} attach="material" />
+            </mesh>
+            <lineSegments>
+              <edgesGeometry args={[new THREE.CylinderGeometry(0.08, 0.08, 0.3, 8)]} />
+              <primitive object={hingeOutlineMaterial} attach="material" />
+            </lineSegments>
+          </group>
         ))}
 
         {/* Terminal text on left door surface - canvas texture */}
@@ -292,27 +304,42 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
 
         {/* Hinges */}
         {[0, 1, 2].map((i) => (
-          <mesh
-            key={`right-hinge-${i}`}
-            position={[0, -DOOR.height / 2 + (i + 0.5) * (DOOR.height / 3), DOOR.depth / 2 + 0.05]}
-          >
-            <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
-            <primitive object={hingeMataterial} attach="material" />
-          </mesh>
+          <group key={`right-hinge-${i}`} position={[0, -DOOR.height / 2 + (i + 0.5) * (DOOR.height / 3), DOOR.depth / 2 + 0.05]}>
+            <mesh>
+              <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
+              <primitive object={hingeMataterial} attach="material" />
+            </mesh>
+            <lineSegments>
+              <edgesGeometry args={[new THREE.CylinderGeometry(0.08, 0.08, 0.3, 8)]} />
+              <primitive object={hingeOutlineMaterial} attach="material" />
+            </lineSegments>
+          </group>
         ))}
       </group>
 
       {/* Locking bars (vertical bars on doors when closed) */}
       {state === 'closed' && (
         <>
-          <mesh position={[leftHingeX + DOOR.width, CONTAINER.CENTER_Y, DOOR.zPosition + DOOR.depth / 2 + 0.05]}>
-            <cylinderGeometry args={[0.06, 0.06, DOOR.height * 0.6, 8]} />
-            <primitive object={hingeMataterial} attach="material" />
-          </mesh>
-          <mesh position={[rightHingeX - DOOR.width, CONTAINER.CENTER_Y, DOOR.zPosition + DOOR.depth / 2 + 0.05]}>
-            <cylinderGeometry args={[0.06, 0.06, DOOR.height * 0.6, 8]} />
-            <primitive object={hingeMataterial} attach="material" />
-          </mesh>
+          <group position={[leftHingeX + DOOR.width, CONTAINER.CENTER_Y, DOOR.zPosition + DOOR.depth / 2 + 0.05]}>
+            <mesh>
+              <cylinderGeometry args={[0.06, 0.06, DOOR.height * 0.6, 8]} />
+              <primitive object={hingeMataterial} attach="material" />
+            </mesh>
+            <lineSegments>
+              <edgesGeometry args={[new THREE.CylinderGeometry(0.06, 0.06, DOOR.height * 0.6, 8)]} />
+              <primitive object={hingeOutlineMaterial} attach="material" />
+            </lineSegments>
+          </group>
+          <group position={[rightHingeX - DOOR.width, CONTAINER.CENTER_Y, DOOR.zPosition + DOOR.depth / 2 + 0.05]}>
+            <mesh>
+              <cylinderGeometry args={[0.06, 0.06, DOOR.height * 0.6, 8]} />
+              <primitive object={hingeMataterial} attach="material" />
+            </mesh>
+            <lineSegments>
+              <edgesGeometry args={[new THREE.CylinderGeometry(0.06, 0.06, DOOR.height * 0.6, 8)]} />
+              <primitive object={hingeOutlineMaterial} attach="material" />
+            </lineSegments>
+          </group>
         </>
       )}
     </group>
