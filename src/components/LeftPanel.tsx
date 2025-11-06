@@ -200,7 +200,7 @@ export function LeftPanel() {
                   <div className="flex items-start gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-zinc-800 flex-shrink-0">
                       <img
-                        src="/docker-logo.svg"
+                        src="/design-system-lab/docker-logo.svg"
                         alt="Docker"
                         className="h-6 w-6"
                       />
