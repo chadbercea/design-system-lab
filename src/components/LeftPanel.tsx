@@ -2,27 +2,48 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAppState } from '@/lib/app-state-context';
+import { useDemoAuth } from '@/contexts/DemoAuthContext';
 import { DockerImage } from '@/types/docker';
 import { fetchImages } from '@/lib/mock-docker-api';
 import { SAMPLE_IMAGE } from '@/lib/fixtures/docker-images';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import DemoOAuthFlow from '@/components/auth/DemoOAuthFlow';
 
 export function LeftPanel() {
   const { setSelectedImage, setContainerStatus } = useAppState();
+  const { isAuthenticated, login } = useDemoAuth();
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [images, setImages] = useState<DockerImage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imagesPerPage, setImagesPerPage] = useState(5);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [imageCardsVisible, setImageCardsVisible] = useState<boolean[]>([]);
   const imageListRef = useRef<HTMLDivElement>(null);
 
   // Fetch images on mount
   useEffect(() => {
     loadImages();
   }, []);
+
+  // Sequential fade-in for image cards when authenticated
+  useEffect(() => {
+    if (isAuthenticated && images.length > 0) {
+      setImageCardsVisible(new Array(images.length).fill(false));
+      images.forEach((_, index) => {
+        setTimeout(() => {
+          setImageCardsVisible(prev => {
+            const newVisible = [...prev];
+            newVisible[index] = true;
+            return newVisible;
+          });
+        }, index * 150);
+      });
+    }
+  }, [isAuthenticated, images.length]);
 
   // Calculate how many images can fit in available space
   useEffect(() => {
@@ -97,6 +118,11 @@ export function LeftPanel() {
     setSelectedImageId(SAMPLE_IMAGE.id);
   };
 
+  const handleAuthSuccess = async (username: string) => {
+    await login(username);
+    setShowAuthModal(false);
+  };
+
   const formatSize = (bytes?: number) => {
     if (!bytes) return 'Unknown';
     const mb = bytes / 1000000;
@@ -129,6 +155,7 @@ export function LeftPanel() {
   };
 
   return (
+    <>
     <div className="fixed left-5 top-[80px] bottom-[60px] w-[253px] bg-black/80 backdrop-blur-sm border border-black flex flex-col z-30">
       {/* Header */}
       <div className="px-4 py-3 border-b border-black flex-shrink-0">
@@ -185,17 +212,38 @@ export function LeftPanel() {
                 Error: {error}
               </div>
             )}
-            {!loading && !error && currentImages.map((image) => {
+            {/* Auth Empty State */}
+            {!loading && !error && !isAuthenticated && (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
+                <p className="text-xs text-zinc-400 text-center">
+                  Auth Docker Hub
+                </p>
+                <Button
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-zinc-600 hover:bg-zinc-700 text-white text-xs h-8 px-6"
+                  size="sm"
+                >
+                  Connect
+                </Button>
+              </div>
+            )}
+            {/* Authenticated Image List */}
+            {!loading && !error && isAuthenticated && currentImages.map((image, index) => {
               const isSelected = selectedImageId === image.id;
+              const isVisible = imageCardsVisible[startIndex + index];
               return (
                 <button
                   key={image.id}
                   onClick={() => handleImageSelect(image)}
-                  className={`w-full text-left rounded-lg border p-2 transition-colors flex-shrink-0 ${
+                  className={`w-full text-left rounded-lg border p-2 transition-all duration-500 flex-shrink-0 ${
                     isSelected
                       ? 'border-white bg-zinc-800/30 hover:bg-zinc-800/50'
                       : 'border-zinc-600 bg-zinc-950/30'
                   }`}
+                  style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'translateY(0)' : 'translateY(10px)'
+                  }}
                 >
                   <div className="flex items-start gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-zinc-800 flex-shrink-0">
@@ -222,7 +270,7 @@ export function LeftPanel() {
           </div>
 
           {/* Pagination Controls - Fixed at bottom */}
-          {!loading && !error && totalPages > 1 && (
+          {!loading && !error && isAuthenticated && totalPages > 1 && (
             <div className="flex items-center justify-between pt-3 flex-shrink-0">
               <Button
                 onClick={goToPrevPage}
@@ -261,5 +309,14 @@ export function LeftPanel() {
         </Button>
       </div>
     </div>
+
+    {/* OAuth Modal - Outside sidebar */}
+    {showAuthModal && (
+      <DemoOAuthFlow
+        onSuccess={handleAuthSuccess}
+        onCancel={() => setShowAuthModal(false)}
+      />
+    )}
+    </>
   );
 }

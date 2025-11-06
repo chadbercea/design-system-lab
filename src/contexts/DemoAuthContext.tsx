@@ -33,19 +33,9 @@ export function DemoAuthProvider({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load demo auth state from localStorage on mount
+  // Always start unauthenticated - clear any persisted auth
   useEffect(() => {
-    const demoAuth = localStorage.getItem('demo_auth');
-    if (demoAuth) {
-      try {
-        const { username: savedUsername, email: savedEmail } = JSON.parse(demoAuth);
-        setUsername(savedUsername);
-        setEmail(savedEmail);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Failed to parse demo auth:', error);
-      }
-    }
+    localStorage.removeItem('demo_auth');
     setIsLoading(false);
   }, []);
 
@@ -72,12 +62,6 @@ export function DemoAuthProvider({ children }: { children: React.ReactNode }) {
     const cleanUsername = demoUsername.trim();
     const demoEmail = `${cleanUsername}@dockerhub.demo`;
 
-    // Save to localStorage for demo persistence
-    localStorage.setItem('demo_auth', JSON.stringify({
-      username: cleanUsername,
-      email: demoEmail,
-    }));
-
     setUsername(cleanUsername);
     setEmail(demoEmail);
     setIsAuthenticated(true);
@@ -90,7 +74,6 @@ export function DemoAuthProvider({ children }: { children: React.ReactNode }) {
    * Simulate logout
    */
   const logout = useCallback(() => {
-    localStorage.removeItem('demo_auth');
     setUsername(undefined);
     setEmail(undefined);
     setIsAuthenticated(false);

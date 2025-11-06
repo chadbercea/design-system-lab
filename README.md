@@ -1,123 +1,271 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Docker Desktop Reimagined
 
-## Getting Started
+A modern, 3D-first reimagining of Docker Desktop's UI/UX, built with Next.js, Three.js, and React Three Fiber. Experience Docker container management through an immersive glassmorphic interface with real-time 3D visualizations.
 
-First, run the development server:
+![Docker Desktop Reimagined](https://chadbercea.github.io/design-system-lab/)
+
+## 🎨 Design Philosophy
+
+This project reimagines Docker Desktop's interface with a focus on:
+
+- **3D Visualization**: Interactive 3D container and image crate models with state-driven animations
+- **Glassmorphic Design**: Black glass aesthetic with backdrop blur effects and monospace typography
+- **Real Docker Assets**: Authentic Docker logos and branding throughout the interface
+- **Spatial UI**: Containers exist in 3D space with dynamic camera movements and state transitions
+- **Immersive Workflow**: OAuth authentication flows, sequential image loading, and smooth state transitions
+
+### Key Features
+
+- **3D Container Visualization**: Watch containers transition through building → running → error states with wireframe animations
+- **Image Crate System**: Docker images rendered as 3D crates that enter and dock inside containers
+- **OAuth Flow Simulation**: Full Docker Hub authentication flow with black glass modals
+- **Sequential Loading**: Image cards fade in sequentially after authentication
+- **State-Driven Animations**: Camera movements, door animations, and visual feedback tied to container lifecycle
+- **Glassmorphism UI**: Consistent black glass design with zinc/white color palette
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/chadbercea/design-system-lab.git
+cd design-system-lab/.conductor/surabaya-v1
+
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## MUI Sandbox with Storybook
-
-This project includes a dedicated MUI sandbox for theme experimentation and component exploration.
-
-### Quick Start (Local)
+### Build for Production
 
 ```bash
-npm run storybook
+# Build static export
+npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
-Open [http://localhost:6006](http://localhost:6006) to view Storybook.
+## 🎯 How It Works
 
-### Quick Start (Docker)
+### Authentication Flow
 
-For consistent development environments across machines:
+1. **Empty State**: Left sidebar shows "Auth Docker Hub" prompt
+2. **OAuth Modal**: Click "Connect" to launch simulated Docker Hub OAuth flow
+3. **User Interaction**: Click through "Sign In" and "Authorize" buttons
+4. **Success Animation**: Progress bar loads, then image cards fade in sequentially (150ms stagger)
+
+### Container Lifecycle
+
+1. **Ready State**: White wireframe container with closed doors
+2. **Building State**:
+   - Dotted white wireframe with glow effect
+   - Camera rotates around container
+   - Image crate enters and docks
+   - Walls fade in sequentially
+   - Terminal text animates on left door
+   - Doors close automatically
+3. **Running State**:
+   - Black walls with solid white wireframe
+   - Container rotates to show right wall
+   - Shipping label appears on right wall
+   - Docker logo appears on left door
+4. **Error State**: Red wireframe, doors open, white walls
+
+### 3D Architecture
+
+- **Three.js**: Core 3D rendering engine
+- **React Three Fiber**: React renderer for Three.js
+- **@react-three/drei**: Helper components (Html, PerspectiveCamera)
+- **Image Crates**: Rounded rectangular prisms with Docker logos
+- **Container Doors**: Animated double doors with texture overlays
+- **Camera System**: State-driven camera movements and rotations
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                      # Next.js app directory
+├── components/
+│   ├── three/               # 3D components
+│   │   ├── Container3D.tsx  # Main container component
+│   │   ├── ContainerDoors.tsx
+│   │   └── ImageCrate/      # Image crate system
+│   ├── auth/
+│   │   └── DemoOAuthFlow.tsx # OAuth modal flow
+│   ├── LeftPanel.tsx        # Image list sidebar
+│   └── TopBar.tsx           # Navigation header
+├── contexts/
+│   └── DemoAuthContext.tsx  # Auth state management
+├── lib/
+│   ├── container-colors.ts  # Color constants
+│   ├── app-state-context.tsx # Global state
+│   └── mock-docker-api.ts   # Mock data
+└── public/
+    └── docker-logo.svg      # Docker logo asset
+```
+
+## 🎨 Design System
+
+### Colors
+
+- **Background**: Black (#000000)
+- **Glass Surfaces**: `bg-black/80 backdrop-blur-md`
+- **Primary Text**: White (#FFFFFF)
+- **Secondary Text**: Zinc-400 (#A1A1AA)
+- **Borders**: Black with subtle opacity
+- **Buttons**: Zinc-600 (gray)
+- **Progress Bar**: White
+- **Error State**: Red (#FF0000)
+- **Success**: Green-500
+
+### Typography
+
+- **Font**: Monospace (Fira Code)
+- **Sizes**:
+  - Headers: text-2xl (24px)
+  - Body: text-base (16px)
+  - Small: text-xs (12px)
+
+### Animations
+
+- **Modal Enter**: fade-in + zoom-in-95 (300ms)
+- **Step Transitions**: fade-in + slide-in-from-right (500ms)
+- **Image Cards**: sequential fade-in with 150ms stagger
+- **Container States**: smooth 2-3 second transitions
+
+## 🐳 Next Steps: Containerization
+
+### Build Docker Image
 
 ```bash
-# Using the helper script
-./docker-helper.sh start
+# Create Dockerfile
+cat > Dockerfile << 'EOF'
+FROM node:18-alpine AS base
 
-# Or using docker-compose directly
-docker-compose up
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/out ./out
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+
+CMD ["npx", "serve", "out", "-p", "3000"]
+EOF
+
+# Build the image
+docker build -t docker-desktop-reimagined:latest .
+
+# Test locally
+docker run -p 3000:3000 docker-desktop-reimagined:latest
 ```
 
-Open [http://localhost:6006](http://localhost:6006) to view Storybook.
-
-### Documentation
-
-- **[src/mui-sandbox/README.md](./src/mui-sandbox/README.md)** - MUI sandbox overview and theme customization guide
-- **[DOCKER_SETUP.md](./DOCKER_SETUP.md)** - Complete Docker setup guide with troubleshooting
-- **[docs/IMAGE_CRATE_DESIGN_SPEC.md](./docs/IMAGE_CRATE_DESIGN_SPEC.md)** - Docker image crate visual design specification
-- **[docs/IMAGE_CRATE_IMPLEMENTATION_GUIDE.md](./docs/IMAGE_CRATE_IMPLEMENTATION_GUIDE.md)** - Technical implementation guide for 3D crate component
-- **[docs/IMAGE_CRATE_VISUAL_REFERENCE.md](./docs/IMAGE_CRATE_VISUAL_REFERENCE.md)** - Visual reference with concept sketches and asset specs
-
-### Why Docker?
-
-- Consistent environment across all machines
-- Isolated dependencies
-- Production-like testing
-- Easy cleanup and reproducible builds
-
-## MCP Integrations
-
-This project includes Model Context Protocol (MCP) server integrations for AI-assisted development workflows.
-
-### Available MCP Servers
-
-#### 🔴 Sentry MCP - Error Monitoring & Debugging
-
-AI-assisted error monitoring and debugging with Sentry.
-
-**Quick Setup:**
-1. Configure Sentry credentials: `./scripts/setup-sentry-mcp.sh`
-2. Test the connection: `./scripts/test-sentry-mcp.sh`
-3. Or use OAuth: https://mcp.sentry.dev/mcp
-
-**Documentation:**
-- [SENTRY_MCP_SETUP.md](./SENTRY_MCP_SETUP.md) - Complete setup guide
-- [examples/sentry-mcp-workflows.md](./examples/sentry-mcp-workflows.md) - Usage examples
-
-#### 📝 Notion MCP - Documentation & Knowledge Management
-
-AI-assisted Notion workspace management for documentation, project tracking, and knowledge bases.
-
-**Quick Setup:**
-1. Create integration at https://www.notion.so/my-integrations
-2. Add token to `.env.local`: `NOTION_API_KEY=secret_your_token`
-3. Share pages with your integration
-4. Restart Claude Code
-
-**Documentation:**
-- [NOTION_QUICK_START.md](./NOTION_QUICK_START.md) - 5-minute setup
-- [NOTION_MCP_SETUP.md](./NOTION_MCP_SETUP.md) - Complete setup guide
-- [examples/notion-mcp-workflows.md](./examples/notion-mcp-workflows.md) - Usage examples
-
-### Docker Support
-
-Use the provided Docker configuration for containerized development:
+### Push to Docker Hub
 
 ```bash
-docker-compose -f docker-compose.sentry.yml up
+# Login to Docker Hub
+docker login
+
+# Tag the image
+docker tag docker-desktop-reimagined:latest <your-username>/docker-desktop-reimagined:latest
+
+# Push to Docker Hub
+docker push <your-username>/docker-desktop-reimagined:latest
 ```
 
-### MCP Configuration
+## 🔧 Development
 
-All MCP servers are configured in `.mcp.json`. See [MCP_CONFIG_GUIDE.md](./MCP_CONFIG_GUIDE.md) for details on how configuration works.
+### Environment Variables
+
+The project uses GitHub Pages deployment with a basePath:
+
+```bash
+NEXT_PUBLIC_BASE_PATH=/design-system-lab
+```
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run deploy` - Deploy to GitHub Pages
+- `npm run lint` - Run ESLint
+
+## 📦 Dependencies
+
+### Core
+- Next.js 16.0.1
+- React 19
+- Three.js ^0.171.0
+- @react-three/fiber ^8.17.10
+- @react-three/drei ^9.117.3
+
+### UI/Styling
+- Tailwind CSS 3.4.1
+- Radix UI components
+- Lucide React icons
+
+### Development
+- TypeScript 5
+- ESLint
+- PostCSS
+
+## 🎓 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber)
+- [Three.js](https://threejs.org/docs/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+## 📄 License
+
+This project is a design exploration and reimagining. Docker and Docker logos are trademarks of Docker, Inc.
+
+## 🙏 Acknowledgments
+
+- Docker, Inc. for the Docker platform and branding
+- Three.js and React Three Fiber communities
+- Next.js team at Vercel
+- Radix UI for accessible components
+
+---
+
+**Live Demo**: [https://chadbercea.github.io/design-system-lab/](https://chadbercea.github.io/design-system-lab/)
+
+**Repository**: [https://github.com/chadbercea/design-system-lab](https://github.com/chadbercea/design-system-lab)
