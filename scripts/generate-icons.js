@@ -157,9 +157,10 @@ async function generateIcon(size, outputPath) {
   const containerHeight = CONTAINER_HEIGHT * scale;
   const containerDepth = CONTAINER_DEPTH * scale;
 
-  // Center the container and offset to ensure it's fully visible
+  // Center the container vertically - calculate the actual height of the isometric box
+  const isoHeight = containerDepth + (containerHeight + containerWidth) * Math.sin(Math.PI / 6);
   const centerX = size / 2;
-  const centerY = size / 2 + containerDepth / 3; // Offset down to prevent top cutoff
+  const centerY = size / 2 + isoHeight / 2; // True vertical center
 
   // Draw the container
   ctx.save();
@@ -182,14 +183,15 @@ async function generateMetadataImage(width, height, outputPath) {
   ctx.fillRect(0, 0, width, height);
 
   // Calculate container position to center it
-  const scale = Math.min(width, height) / 250;
+  const scale = Math.min(width, height) / 300;
   const containerWidth = CONTAINER_WIDTH * scale;
   const containerHeight = CONTAINER_HEIGHT * scale;
   const containerDepth = CONTAINER_DEPTH * scale;
 
-  // Center the container with offset to prevent top cutoff
+  // Center the container in the upper portion (leave room for text at bottom)
+  const isoHeight = containerDepth + (containerHeight + containerWidth) * Math.sin(Math.PI / 6);
   const centerX = width / 2;
-  const centerY = height / 2.5 + containerDepth / 3;
+  const centerY = height / 3 + isoHeight / 2; // Upper third, centered
 
   // Draw the container
   ctx.save();
