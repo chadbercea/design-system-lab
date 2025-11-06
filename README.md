@@ -22,6 +22,7 @@ This project reimagines Docker Desktop's interface with a focus on:
 - **Sequential Loading**: Image cards fade in sequentially after authentication
 - **State-Driven Animations**: Camera movements, door animations, and visual feedback tied to container lifecycle
 - **Glassmorphism UI**: Consistent black glass design with zinc/white color palette
+- **Progressive Web App**: Install on any device, works offline, app-like experience
 
 ## 🚀 Getting Started
 
@@ -45,6 +46,26 @@ npm run dev
 ```
 
 Open [http://localhost:3001](http://localhost:3001) with your browser to see the application.
+
+### Install as PWA
+
+The application can be installed on any device as a Progressive Web App:
+
+1. **Desktop (Chrome/Edge)**:
+   - Visit the live demo
+   - Click the install icon in the address bar
+   - Or use Menu → Install Docker Desktop Reimagined
+
+2. **Mobile (iOS/Android)**:
+   - Visit the live demo
+   - iOS: Tap Share → Add to Home Screen
+   - Android: Tap Menu → Install app
+
+3. **Features**:
+   - Runs in standalone window (no browser UI)
+   - Works offline after first visit
+   - App-like experience with native feel
+   - Black theme color for status bar
 
 ### Build for Production
 
