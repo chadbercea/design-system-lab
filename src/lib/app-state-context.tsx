@@ -21,7 +21,7 @@ export interface AppState {
   histogram: HistogramEvent[];
   panelOpen: boolean;
   leftPanelOpen: boolean;
-  activeTab: 'logs' | 'histogram' | 'ports' | 'actions';
+  activeTab: 'logs' | 'histogram' | 'ports';
   cameraPhase: CameraPhase;
   userInteracting: boolean;
 }
@@ -37,7 +37,7 @@ interface AppStateActions {
   setHistogram: (events: HistogramEvent[]) => void;
   setPanelOpen: (open: boolean) => void;
   setLeftPanelOpen: (open: boolean) => void;
-  setActiveTab: (tab: 'logs' | 'histogram' | 'ports' | 'actions') => void;
+  setActiveTab: (tab: 'logs' | 'histogram' | 'ports') => void;
   setCameraPhase: (phase: CameraPhase) => void;
   setUserInteracting: (interacting: boolean) => void;
 }
@@ -79,7 +79,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   );
   const [panelOpen, setPanelOpen] = useState<boolean>(initialState.panelOpen);
   const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(initialState.leftPanelOpen);
-  const [activeTab, setActiveTab] = useState<'logs' | 'histogram' | 'ports' | 'actions'>(
+  const [activeTab, setActiveTab] = useState<'logs' | 'histogram' | 'ports'>(
     initialState.activeTab
   );
   const [cameraPhase, setCameraPhase] = useState<CameraPhase>(initialState.cameraPhase);

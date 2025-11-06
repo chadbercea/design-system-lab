@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogsTab } from '@/components/tabs/LogsTab';
 import { HistogramTab } from '@/components/tabs/HistogramTab';
 import { PortsTab } from '@/components/tabs/PortsTab';
-import { ActionsTab } from '@/components/tabs/ActionsTab';
 
 export function SidePanel() {
   const { activeTab, setActiveTab, containerStatus } = useAppState();
@@ -31,16 +30,10 @@ export function SidePanel() {
       {/* Tabs - fills remaining space */}
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as 'logs' | 'histogram' | 'ports' | 'actions')}
+        onValueChange={(value) => setActiveTab(value as 'logs' | 'histogram' | 'ports')}
         className="flex flex-col flex-1 overflow-hidden"
       >
         <TabsList className="w-full justify-start rounded-none border-b border-black bg-black px-1 gap-0.5">
-          <TabsTrigger
-            value="actions"
-            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-xs px-1.5 flex-1"
-          >
-            Actions
-          </TabsTrigger>
           <TabsTrigger
             value="logs"
             className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-xs px-2 flex-1"
@@ -71,9 +64,6 @@ export function SidePanel() {
           </TabsContent>
           <TabsContent value="ports" className="h-full m-0">
             <PortsTab />
-          </TabsContent>
-          <TabsContent value="actions" className="h-full m-0">
-            <ActionsTab />
           </TabsContent>
         </div>
       </Tabs>

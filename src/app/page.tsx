@@ -10,6 +10,7 @@ import { SidePanel } from '@/components/SidePanel';
 import { LeftPanel } from '@/components/LeftPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { MetricsOverlay } from '@/components/MetricsOverlay';
+import { ContainerActionsBar } from '@/components/ContainerActionsBar';
 
 function AppContent() {
   const { selectedImage, containerStatus } = useAppState();
@@ -43,6 +44,9 @@ function AppContent() {
 
       {/* SidePanel - fixed right side (always visible) */}
       <SidePanel />
+
+      {/* Container Actions Bar - centered, 20px above terminal */}
+      <ContainerActionsBar isTerminalOpen={isTerminalOpen} />
 
       {/* Bottom bar trigger - always visible, opens terminal */}
       {!isTerminalOpen && (
