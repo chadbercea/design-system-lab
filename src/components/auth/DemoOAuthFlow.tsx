@@ -56,7 +56,7 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
         <div className="bg-black/60 border-b border-zinc-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/docker-logo.svg" alt="Docker" className="w-10 h-10" />
+              <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/docker-logo.svg`} alt="Docker" className="w-10 h-10" />
               <div>
                 <h2 className="text-white font-semibold text-lg">Docker Hub</h2>
                 <p className="text-zinc-400 text-xs">OAuth Authorization</p>
@@ -137,7 +137,7 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
               {/* App Info */}
               <div className="bg-zinc-900/50 border border-zinc-700 rounded-lg p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <img src="/docker-logo.svg" alt="Docker" className="w-12 h-12" />
+                  <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/docker-logo.svg`} alt="Docker" className="w-12 h-12" />
                   <div>
                     <p className="font-semibold text-white">Your Application</p>
                     <p className="text-sm text-zinc-400">wants to access your Docker Hub account</p>
