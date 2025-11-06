@@ -109,7 +109,7 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
                   <label className="block text-base font-medium text-zinc-300 mb-2">
                     Docker ID or Email
                   </label>
-                  <div className="w-full px-4 py-3 border border-black rounded-md bg-black/40">
+                  <div className="w-full px-4 py-3 border border-zinc-700 rounded-md bg-black/40">
                     <span className="text-zinc-400">demo-user@example.com</span>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
                   <label className="block text-base font-medium text-zinc-300 mb-2">
                     Password
                   </label>
-                  <div className="w-full px-4 py-3 border border-black rounded-md bg-black/40">
+                  <div className="w-full px-4 py-3 border border-zinc-700 rounded-md bg-black/40">
                     <span className="text-zinc-400">••••••••</span>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function DemoOAuthFlow({ onSuccess, onCancel }: DemoOAuthFlowProp
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={onCancel}
-                  className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-900 text-zinc-300 rounded-md font-medium border border-black transition-colors"
+                  className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-900 text-zinc-300 rounded-md font-medium border border-zinc-700 transition-colors"
                 >
                   Cancel
                 </button>
