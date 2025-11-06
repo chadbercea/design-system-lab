@@ -15,6 +15,34 @@ export const metadata: Metadata = {
   description: "A modern, 3D-first reimagining of Docker Desktop's UI/UX with glassmorphic design",
   manifest: "/design-system-lab/manifest.json",
   themeColor: "#000000",
+  icons: {
+    icon: [
+      { url: "/design-system-lab/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/design-system-lab/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/design-system-lab/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "Docker Desktop Reimagined",
+    description: "A modern, 3D-first reimagining of Docker Desktop's UI/UX with glassmorphic design",
+    images: [
+      {
+        url: "/design-system-lab/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Docker Desktop Reimagined - 3D Container Visualization",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Docker Desktop Reimagined",
+    description: "A modern, 3D-first reimagining of Docker Desktop's UI/UX with glassmorphic design",
+    images: ["/design-system-lab/twitter-image.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
