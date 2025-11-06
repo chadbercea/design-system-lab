@@ -34,6 +34,11 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  // Only handle http(s) requests, skip chrome-extension and other schemes
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Cache hit - return response
@@ -58,6 +63,9 @@ self.addEventListener('fetch', (event) => {
         });
 
         return response;
+      }).catch(() => {
+        // Network request failed, just return
+        return new Response('Network error', { status: 408 });
       });
     })
   );
