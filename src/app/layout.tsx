@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Fira_Code } from "next/font/google";
 import "./globals.css";
 import { DemoAuthProvider } from "@/contexts/DemoAuthContext";
-import SimpleDemoFirstLaunch from "@/components/auth/SimpleDemoFirstLaunch";
 import { PWARegister } from "@/components/PWARegister";
 
 const firaCode = Fira_Code({
@@ -42,7 +41,6 @@ export default function RootLayout({
       >
         <PWARegister />
         <DemoAuthProvider>
-          <SimpleDemoFirstLaunch />
           {children}
         </DemoAuthProvider>
       </body>
