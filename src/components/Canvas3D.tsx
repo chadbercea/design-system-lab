@@ -30,6 +30,25 @@ function FallbackLoader() {
 }
 
 /**
+ * ResizeHandler - Ensures camera stays centered on resize
+ */
+function ResizeHandler() {
+  const { camera, gl } = useThree();
+
+  useEffect(() => {
+    const handleResize = () => {
+      camera.aspect = gl.domElement.width / gl.domElement.height;
+      camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [camera, gl]);
+
+  return null;
+}
+
+/**
  * CameraController - Choreographs camera position for building sequence
  *
  * Camera positions for each phase:
@@ -39,9 +58,10 @@ function FallbackLoader() {
  * - terminal: Hold front view to see terminal text on left door
  * - runningRotate: 45° angle off right side for running state
  */
-function CameraController({ cameraPhase }: { cameraPhase: string }) {
+function CameraController({ cameraPhase, containerStatus }: { cameraPhase: string; containerStatus: string }) {
   const controlsRef = useRef<OrbitControlsType | null>(null);
   const { camera } = useThree();
+  const { setUserInteracting } = useAppState();
   const prevPhaseRef = useRef<string>(cameraPhase);
   const isAnimatingRef = useRef(false);
   const animStartTimeRef = useRef<number | null>(null);
@@ -69,6 +89,32 @@ function CameraController({ cameraPhase }: { cameraPhase: string }) {
         return new THREE.Vector3(8, 6, 12);
     }
   };
+
+  // Detect user interaction in ready state
+  useEffect(() => {
+    if (!controlsRef.current) return;
+
+    const handleStart = () => {
+      if (containerStatus === 'ready') {
+        setUserInteracting(true);
+      }
+    };
+
+    const handleEnd = () => {
+      if (containerStatus === 'ready') {
+        setUserInteracting(false);
+      }
+    };
+
+    const controls = controlsRef.current;
+    controls.addEventListener('start', handleStart);
+    controls.addEventListener('end', handleEnd);
+
+    return () => {
+      controls.removeEventListener('start', handleStart);
+      controls.removeEventListener('end', handleEnd);
+    };
+  }, [containerStatus, setUserInteracting]);
 
   useFrame(() => {
     // Detect phase change
@@ -144,6 +190,10 @@ export function Canvas3D() {
             alpha: false,
             powerPreference: 'high-performance',
           }}
+          camera={{
+            position: [8, 6, 12],
+            fov: 50,
+          }}
         >
           {/* Camera */}
           <PerspectiveCamera
@@ -165,8 +215,11 @@ export function Canvas3D() {
           {/* Container 3D visualization */}
           <Container3D state={containerState} />
 
+          {/* Resize handler to keep camera centered */}
+          <ResizeHandler />
+
           {/* Camera controls with choreographed movements for building sequence */}
-          <CameraController cameraPhase={cameraPhase} />
+          <CameraController cameraPhase={cameraPhase} containerStatus={containerStatus} />
         </Canvas>
       </Suspense>
 

@@ -1,87 +1,246 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/app-state-context';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { createStatsStream } from '@/lib/mock-docker-api';
+import { ContainerStats } from '@/types/docker';
 
-export function TopBar() {
-  const { selectedImage, containerStatus, setContainerStatus } = useAppState();
+interface TopBarProps {
+  onTerminalToggle?: () => void;
+}
 
-  const handleStatusToggle = () => {
-    if (containerStatus === 'running') {
-      setContainerStatus('ready');
-    } else if (containerStatus === 'ready') {
-      // Start build sequence
-      setContainerStatus('building');
-      // Auto-transition to running after complete build sequence:
-      // - Crate enters + walls fade: ~6.5s
-      // - Doors close during fade: ~2.15s
-      // - Terminal text types: ~7s (211 chars ÷ 30 chars/sec)
-      // - "Starting..." display: 2s
-      // Total: ~17.5 seconds + buffer
-      setTimeout(() => {
-        setContainerStatus('running');
-      }, 20000);
+export function TopBar({ onTerminalToggle }: TopBarProps) {
+  const { selectedImage, containerStatus, config } = useAppState();
+  const [stats, setStats] = useState<ContainerStats | null>(null);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  // Stream real-time stats when container is running
+  useEffect(() => {
+    if (containerStatus === 'running' || containerStatus === 'building') {
+      const cleanup = createStatsStream('mock-container-id', containerStatus, setStats);
+      return cleanup;
+    } else {
+      setStats(null);
+    }
+  }, [containerStatus]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenu(null);
+    if (activeMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [activeMenu]);
+
+  const toggleMenu = (menu: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveMenu(activeMenu === menu ? null : menu);
+  };
+
+  const cpuPercent = stats?.cpuPercent || 0;
+  const memoryUsageMB = stats ? Math.round(stats.memoryUsage / (1024 * 1024)) : 0;
+  const memoryLimitMB = stats ? Math.round(stats.memoryLimit / (1024 * 1024)) : 1024;
+  const memoryPercent = stats ? (stats.memoryUsage / stats.memoryLimit) * 100 : 0;
+
+  // Get localhost URL from config or use default
+  const defaultPort = 6001;
+  const port = config?.ports?.[0]?.hostPort || defaultPort;
+  const localhostUrl = `localhost:${port}`;
+
+  // Status colors and text
+  const getStatusConfig = () => {
+    switch (containerStatus) {
+      case 'building':
+        return {
+          color: 'bg-zinc-500',
+          text: 'Building',
+          textColor: 'text-zinc-400',
+        };
+      case 'running':
+        return {
+          color: 'bg-zinc-300',
+          text: 'Running',
+          textColor: 'text-zinc-300',
+        };
+      case 'error':
+        return {
+          color: 'bg-zinc-600',
+          text: 'Error',
+          textColor: 'text-zinc-400',
+        };
+      case 'ready':
+      default:
+        return {
+          color: 'bg-zinc-400',
+          text: 'Ready',
+          textColor: 'text-zinc-400',
+        };
     }
   };
 
-  return (
-    <div className="flex h-[60px] w-full items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
-      {/* Left: Docker logo/branding */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <svg
-            className="h-6 w-6 text-blue-500"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338 0-.676.03-1.01.09-.377-2.18-1.99-3.44-2.058-3.49l-.276-.19-.183.275c-.297.446-.505.98-.602 1.545-.166.959-.014 1.925.45 2.735a3.9 3.9 0 01-1.313.469l-13.77.003c-.407 0-.74.334-.74.741-.022.95.11 1.897.397 2.8.346 1.09.955 2.064 1.764 2.82.935.878 2.407 1.653 4.095 1.653.685.006 1.368-.067 2.04-.22 1.146-.26 2.243-.7 3.24-1.3 1.674-1.006 3.055-2.43 4.01-4.123.88.02 2.79.04 3.77-1.89.015-.036.04-.072.06-.108l.105-.18-.152-.096z" />
-          </svg>
-          <span className="text-sm font-semibold text-zinc-100">Docker Desktop</span>
-        </div>
-      </div>
+  const statusConfig = getStatusConfig();
 
-      {/* Center: Container name + image tag */}
-      <div className="flex items-center gap-2">
-        {selectedImage ? (
-          <>
-            <span className="text-sm font-medium text-zinc-300">
+  return (
+    <div className="flex h-[30px] w-full items-center justify-between border-b border-zinc-700 bg-black px-4 relative">
+      {/* Left: Docker logo/branding + menu bar */}
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          <img
+            src="/docker-logo.svg"
+            alt="Docker"
+            className="h-4 w-4"
+          />
+          <span className="text-xs font-semibold text-zinc-100">Docker Desktop</span>
+        </div>
+
+        {/* Menu Bar */}
+        <div className="flex items-center gap-1">
+          {/* File Menu */}
+          <div className="relative">
+            <button
+              onClick={(e) => toggleMenu('file', e)}
+              className="px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800 rounded"
+            >
+              File
+            </button>
+            {activeMenu === 'file' && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-black border border-zinc-700 rounded shadow-lg z-50">
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  New Container
+                </button>
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Import Image
+                </button>
+                <div className="border-t border-zinc-800 my-1" />
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Settings
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* View Menu */}
+          <div className="relative">
+            <button
+              onClick={(e) => toggleMenu('view', e)}
+              className="px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800 rounded"
+            >
+              View
+            </button>
+            {activeMenu === 'view' && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-black border border-zinc-700 rounded shadow-lg z-50">
+                <button
+                  onClick={() => {
+                    onTerminalToggle?.();
+                    setActiveMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800"
+                >
+                  Toggle Terminal
+                </button>
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Container Logs
+                </button>
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Performance Stats
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Help Menu */}
+          <div className="relative">
+            <button
+              onClick={(e) => toggleMenu('help', e)}
+              className="px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800 rounded"
+            >
+              Help
+            </button>
+            {activeMenu === 'help' && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-black border border-zinc-700 rounded shadow-lg z-50">
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Documentation
+                </button>
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  Keyboard Shortcuts
+                </button>
+                <div className="border-t border-zinc-800 my-1" />
+                <button className="w-full px-3 py-2 text-xs text-left text-zinc-300 hover:bg-zinc-800">
+                  About Docker Desktop
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {selectedImage && (
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-xs font-medium text-zinc-300">
               {selectedImage.name}
             </span>
-            <Badge variant="outline" className="bg-zinc-800 text-zinc-400 border-zinc-700">
+            <Badge variant="outline" className="bg-zinc-800 text-zinc-400 border-zinc-700 text-xs py-0 h-4">
               {selectedImage.tag}
             </Badge>
-          </>
-        ) : (
-          <span className="text-sm text-zinc-500">No image selected</span>
+          </div>
         )}
       </div>
 
-      {/* Right: Action buttons */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleStatusToggle}
-          className={`border-zinc-700 ${
-            containerStatus === 'running'
-              ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30'
-              : containerStatus === 'error'
-              ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
-              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-          }`}
-        >
-          <span className={`mr-1 ${
-            containerStatus === 'running'
-              ? 'text-green-400'
-              : containerStatus === 'error'
-              ? 'text-red-400'
-              : 'text-zinc-500'
-          }`}>
-            •
+      {/* Right: Status, localhost URL, and stats from BottomBar */}
+      <div className="flex items-center gap-4">
+        {/* Status indicator */}
+        <div className="flex items-center gap-2">
+          <div className={`h-1.5 w-1.5 rounded-full ${statusConfig.color} animate-pulse`} />
+          <span className={`text-xs font-medium ${statusConfig.textColor}`}>
+            {statusConfig.text}
           </span>
-          {containerStatus === 'running' ? 'Stop' : 'Run'}
-        </Button>
+        </div>
+
+        {/* Localhost URL */}
+        <div className="flex items-center">
+          {containerStatus === 'running' ? (
+            <a
+              href={`http://${localhostUrl}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-zinc-400 hover:text-zinc-300 hover:underline transition-colors"
+            >
+              {localhostUrl}
+            </a>
+          ) : (
+            <span className="text-xs text-zinc-600">{localhostUrl}</span>
+          )}
+        </div>
+
+        {/* Live stats */}
+        <div className="flex items-center gap-3">
+          {containerStatus === 'running' ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-zinc-500">CPU:</span>
+                <span className="text-xs font-medium text-zinc-300">
+                  {cpuPercent.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-zinc-500">Memory:</span>
+                <span className="text-xs font-medium text-zinc-300">
+                  {memoryUsageMB}MB / {memoryLimitMB}MB
+                </span>
+                <span className="text-xs text-zinc-500">
+                  ({memoryPercent.toFixed(0)}%)
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-zinc-600">
+                No stats available
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

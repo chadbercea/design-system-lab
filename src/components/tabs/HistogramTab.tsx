@@ -30,14 +30,14 @@ export function HistogramTab() {
   return (
     <div className="flex h-full flex-col">
       {/* Histogram header with stats */}
-      <div className="border-b border-zinc-800 bg-zinc-900 px-6 py-3">
+      <div className="border-b border-black bg-zinc-900 px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-zinc-400">
               {events.length} {events.length === 1 ? 'event' : 'events'}
             </span>
             {isActive && (
-              <Badge variant="outline" className="h-5 border-blue-700 bg-blue-900/20 text-blue-400">
+              <Badge variant="outline" className="h-5 border-zinc-700 bg-zinc-900/20 text-zinc-400">
                 <span className="mr-1 animate-pulse">●</span>
                 Active
               </Badge>
@@ -53,7 +53,7 @@ export function HistogramTab() {
               <span className="text-zinc-300">{stats.total}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded bg-zinc-800 px-2 py-1 text-xs">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="h-2 w-2 rounded-full bg-zinc-500" />
               <span className="text-zinc-400">Success:</span>
               <span className="text-zinc-300">{stats.success}</span>
             </div>
@@ -81,15 +81,15 @@ export function HistogramTab() {
             {events.slice().reverse().map((event) => (
               <div
                 key={event.id}
-                className="flex items-start gap-3 rounded border border-zinc-800 bg-zinc-900 p-3"
+                className="flex items-start gap-3 rounded border border-black bg-zinc-900 p-3"
               >
                 {/* Type indicator */}
                 <div
                   className={`mt-0.5 h-2 w-2 flex-shrink-0 rounded-full ${
                     event.type === 'http'
-                      ? 'bg-blue-500'
+                      ? 'bg-zinc-500'
                       : event.type === 'db'
-                      ? 'bg-green-500'
+                      ? 'bg-zinc-500'
                       : event.type === 'cache'
                       ? 'bg-purple-500'
                       : 'bg-zinc-500'
@@ -117,7 +117,7 @@ export function HistogramTab() {
                       Duration: {event.duration}ms
                       <span
                         className={`ml-2 ${
-                          event.status === 'success' ? 'text-green-400' : 'text-red-400'
+                          event.status === 'success' ? 'text-zinc-400' : 'text-red-400'
                         }`}
                       >
                         {event.status}

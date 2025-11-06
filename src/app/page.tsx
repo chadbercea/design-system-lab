@@ -4,50 +4,49 @@ import { useState } from 'react';
 import { AppStateProvider, useAppState } from '@/lib/app-state-context';
 import { TopBar } from '@/components/TopBar';
 import { BottomBar } from '@/components/BottomBar';
-import { ImageSelectorModal } from '@/components/ImageSelectorModal';
+import { BottomBarTrigger } from '@/components/BottomBarTrigger';
 import { Canvas3D } from '@/components/Canvas3D';
 import { SidePanel } from '@/components/SidePanel';
+import { LeftPanel } from '@/components/LeftPanel';
 import { EmptyState } from '@/components/EmptyState';
-import { DrawerToggle } from '@/components/DrawerToggle';
 
 function AppContent() {
   const { selectedImage } = useAppState();
-  const [showImageSelector, setShowImageSelector] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
   return (
     <>
       {/* Single-view application layout */}
       <div className="flex h-screen flex-col bg-zinc-950">
-        {/* TopBar - persistent, 60px */}
-        <TopBar />
+        {/* TopBar - persistent, 30px */}
+        <TopBar onTerminalToggle={() => setIsTerminalOpen(!isTerminalOpen)} />
 
         {/* Main content area */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Canvas3D or EmptyState */}
+          {/* Canvas3D or EmptyState - full width to render behind panels */}
           <div className="flex flex-1">
             {selectedImage ? (
               <Canvas3D />
             ) : (
-              <EmptyState onSelectImage={() => setShowImageSelector(true)} />
+              <EmptyState />
             )}
           </div>
         </div>
-
-        {/* BottomBar - persistent, 40px */}
-        <BottomBar />
       </div>
 
-      {/* ImageSelectorModal - overlay modal */}
-      <ImageSelectorModal
-        open={showImageSelector}
-        onOpenChange={setShowImageSelector}
-      />
+      {/* LeftPanel - fixed left side (always visible) */}
+      <LeftPanel />
 
-      {/* DrawerToggle - right edge button */}
-      {selectedImage && <DrawerToggle />}
-
-      {/* SidePanel - right overlay */}
+      {/* SidePanel - fixed right side (always visible) */}
       <SidePanel />
+
+      {/* Bottom bar trigger - always visible, opens terminal */}
+      {!isTerminalOpen && (
+        <BottomBarTrigger onClick={() => setIsTerminalOpen(true)} />
+      )}
+
+      {/* Terminal Drawer - fixed bottom (toggleable) */}
+      <BottomBar isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
     </>
   );
 }

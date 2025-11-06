@@ -77,13 +77,13 @@ export function Terminal({
   const getLineColor = (type?: TerminalLine["type"]) => {
     switch (type) {
       case "error":
-        return "text-red-400";
+        return "text-zinc-400";
       case "warning":
-        return "text-yellow-400";
+        return "text-zinc-400";
       case "success":
-        return "text-green-400";
+        return "text-zinc-300";
       case "command":
-        return "text-blue-400";
+        return "text-zinc-400";
       case "info":
       default:
         return "text-zinc-300";
@@ -125,7 +125,7 @@ export function Terminal({
           onSubmit={handleSubmit}
           className="flex items-center gap-2 border-t border-zinc-800 p-4"
         >
-          <span className="text-green-400">{prompt}</span>
+          <span className="text-zinc-400">{prompt}</span>
           <input
             ref={inputRef}
             type="text"
@@ -164,9 +164,9 @@ export function TerminalHeader({
     >
       <div className="flex items-center gap-2">
         <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+          <div className="w-3 h-3 rounded-full bg-zinc-700/80" />
+          <div className="w-3 h-3 rounded-full bg-zinc-600/80" />
+          <div className="w-3 h-3 rounded-full bg-zinc-500/80" />
         </div>
         <span className="text-sm font-medium text-zinc-400">{title}</span>
       </div>
@@ -208,13 +208,13 @@ export function TerminalLineComponent({
   const getLineColor = () => {
     switch (type) {
       case "error":
-        return "text-red-400";
+        return "text-zinc-400";
       case "warning":
-        return "text-yellow-400";
+        return "text-zinc-400";
       case "success":
-        return "text-green-400";
+        return "text-zinc-300";
       case "command":
-        return "text-blue-400";
+        return "text-zinc-400";
       case "info":
       default:
         return "text-zinc-300";

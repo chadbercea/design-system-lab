@@ -20,8 +20,10 @@ export interface AppState {
   logs: LogEntry[];
   histogram: HistogramEvent[];
   panelOpen: boolean;
+  leftPanelOpen: boolean;
   activeTab: 'logs' | 'histogram' | 'ports' | 'actions';
   cameraPhase: CameraPhase;
+  userInteracting: boolean;
 }
 
 // Context actions interface
@@ -34,8 +36,10 @@ interface AppStateActions {
   addHistogramEvent: (event: HistogramEvent) => void;
   setHistogram: (events: HistogramEvent[]) => void;
   setPanelOpen: (open: boolean) => void;
+  setLeftPanelOpen: (open: boolean) => void;
   setActiveTab: (tab: 'logs' | 'histogram' | 'ports' | 'actions') => void;
   setCameraPhase: (phase: CameraPhase) => void;
+  setUserInteracting: (interacting: boolean) => void;
 }
 
 // Combined context type
@@ -52,8 +56,10 @@ const initialState: AppState = {
   logs: [],
   histogram: [],
   panelOpen: false,
+  leftPanelOpen: false,
   activeTab: 'logs',
   cameraPhase: 'default',
+  userInteracting: false,
 };
 
 // Provider component
@@ -72,10 +78,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     initialState.histogram
   );
   const [panelOpen, setPanelOpen] = useState<boolean>(initialState.panelOpen);
+  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(initialState.leftPanelOpen);
   const [activeTab, setActiveTab] = useState<'logs' | 'histogram' | 'ports' | 'actions'>(
     initialState.activeTab
   );
   const [cameraPhase, setCameraPhase] = useState<CameraPhase>(initialState.cameraPhase);
+  const [userInteracting, setUserInteracting] = useState<boolean>(initialState.userInteracting);
 
   // Helper function to add a single log entry
   const addLog = (log: LogEntry) => {
@@ -94,8 +102,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     logs,
     histogram,
     panelOpen,
+    leftPanelOpen,
     activeTab,
     cameraPhase,
+    userInteracting,
     setSelectedImage,
     setContainerStatus,
     setConfig,
@@ -104,8 +114,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addHistogramEvent,
     setHistogram,
     setPanelOpen,
+    setLeftPanelOpen,
     setActiveTab,
     setCameraPhase,
+    setUserInteracting,
   };
 
   return (
