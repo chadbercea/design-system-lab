@@ -7,46 +7,132 @@ const fs = require('fs');
 const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 
-// Container dimensions and styling from Container3D.tsx
-const CONTAINER_COLOR = '#10b981'; // green-500 for "ready" state
-const CONTAINER_WIDTH = 120;
-const CONTAINER_HEIGHT = 80;
-const CONTAINER_DEPTH = 100;
+// Container dimensions and styling - transparent dashed style
+const CONTAINER_WIDTH = 100;
+const CONTAINER_HEIGHT = 60;
+const CONTAINER_DEPTH = 80;
+const LINE_COLOR = '#ffffff'; // white lines
+const FILL_COLOR = 'rgba(0, 0, 0, 0.3)'; // semi-transparent black
 
-function drawIsometricBox(ctx, x, y, width, height, depth, color) {
+function drawIsometricBox(ctx, x, y, width, height, depth) {
   // Convert to isometric coordinates (45-degree angle)
   const isoX = (x - y) * Math.cos(Math.PI / 6);
   const isoY = (x + y) * Math.sin(Math.PI / 6) - depth;
 
+  // Calculate all vertices
+  const vertices = {
+    topFrontLeft: [isoX, isoY],
+    topFrontRight: [isoX + width * Math.cos(Math.PI / 6), isoY - width * Math.sin(Math.PI / 6)],
+    topBackRight: [isoX + (width - height) * Math.cos(Math.PI / 6), isoY - (width + height) * Math.sin(Math.PI / 6)],
+    topBackLeft: [isoX - height * Math.cos(Math.PI / 6), isoY - height * Math.sin(Math.PI / 6)],
+    bottomFrontLeft: [isoX, isoY + depth],
+    bottomFrontRight: [isoX + width * Math.cos(Math.PI / 6), isoY + depth - width * Math.sin(Math.PI / 6)],
+    bottomBackRight: [isoX + (width - height) * Math.cos(Math.PI / 6), isoY + depth - (width + height) * Math.sin(Math.PI / 6)],
+    bottomBackLeft: [isoX - height * Math.cos(Math.PI / 6), isoY + depth - height * Math.sin(Math.PI / 6)],
+  };
+
+  // Fill faces with semi-transparent black
+  ctx.globalAlpha = 0.3;
+
   // Top face
-  ctx.fillStyle = color;
+  ctx.fillStyle = FILL_COLOR;
   ctx.beginPath();
-  ctx.moveTo(isoX, isoY);
-  ctx.lineTo(isoX + width * Math.cos(Math.PI / 6), isoY - width * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX + (width - height) * Math.cos(Math.PI / 6), isoY - (width + height) * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX - height * Math.cos(Math.PI / 6), isoY - height * Math.sin(Math.PI / 6));
+  ctx.moveTo(...vertices.topFrontLeft);
+  ctx.lineTo(...vertices.topFrontRight);
+  ctx.lineTo(...vertices.topBackRight);
+  ctx.lineTo(...vertices.topBackLeft);
   ctx.closePath();
   ctx.fill();
 
-  // Left face (darker)
-  ctx.fillStyle = adjustBrightness(color, -30);
+  // Left face
   ctx.beginPath();
-  ctx.moveTo(isoX, isoY);
-  ctx.lineTo(isoX - height * Math.cos(Math.PI / 6), isoY - height * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX - height * Math.cos(Math.PI / 6), isoY + depth - height * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX, isoY + depth);
+  ctx.moveTo(...vertices.topFrontLeft);
+  ctx.lineTo(...vertices.topBackLeft);
+  ctx.lineTo(...vertices.bottomBackLeft);
+  ctx.lineTo(...vertices.bottomFrontLeft);
   ctx.closePath();
   ctx.fill();
 
-  // Right face (lighter)
-  ctx.fillStyle = adjustBrightness(color, -15);
+  // Right face
   ctx.beginPath();
-  ctx.moveTo(isoX, isoY);
-  ctx.lineTo(isoX + width * Math.cos(Math.PI / 6), isoY - width * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX + width * Math.cos(Math.PI / 6), isoY + depth - width * Math.sin(Math.PI / 6));
-  ctx.lineTo(isoX, isoY + depth);
+  ctx.moveTo(...vertices.topFrontLeft);
+  ctx.lineTo(...vertices.topFrontRight);
+  ctx.lineTo(...vertices.bottomFrontRight);
+  ctx.lineTo(...vertices.bottomFrontLeft);
   ctx.closePath();
   ctx.fill();
+
+  ctx.globalAlpha = 1.0;
+
+  // Draw dashed white edges
+  ctx.strokeStyle = LINE_COLOR;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 3]); // Dashed line pattern
+
+  // Top edges
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topFrontLeft);
+  ctx.lineTo(...vertices.topFrontRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topFrontRight);
+  ctx.lineTo(...vertices.topBackRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topBackRight);
+  ctx.lineTo(...vertices.topBackLeft);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topBackLeft);
+  ctx.lineTo(...vertices.topFrontLeft);
+  ctx.stroke();
+
+  // Bottom edges
+  ctx.beginPath();
+  ctx.moveTo(...vertices.bottomFrontLeft);
+  ctx.lineTo(...vertices.bottomFrontRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.bottomFrontRight);
+  ctx.lineTo(...vertices.bottomBackRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.bottomBackRight);
+  ctx.lineTo(...vertices.bottomBackLeft);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.bottomBackLeft);
+  ctx.lineTo(...vertices.bottomFrontLeft);
+  ctx.stroke();
+
+  // Vertical edges
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topFrontLeft);
+  ctx.lineTo(...vertices.bottomFrontLeft);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topFrontRight);
+  ctx.lineTo(...vertices.bottomFrontRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topBackRight);
+  ctx.lineTo(...vertices.bottomBackRight);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(...vertices.topBackLeft);
+  ctx.lineTo(...vertices.bottomBackLeft);
+  ctx.stroke();
+
+  ctx.setLineDash([]); // Reset to solid line
 }
 
 function adjustBrightness(hex, percent) {
@@ -65,28 +151,21 @@ async function generateIcon(size, outputPath) {
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, size, size);
 
-  // Calculate container position to center it
-  const scale = size / 300; // Scale based on size
+  // Calculate container position to center it and fit within bounds
+  const scale = size / 250; // Scale based on size, smaller to fit better
   const containerWidth = CONTAINER_WIDTH * scale;
   const containerHeight = CONTAINER_HEIGHT * scale;
   const containerDepth = CONTAINER_DEPTH * scale;
 
-  // Center the container
+  // Center the container and offset to ensure it's fully visible
   const centerX = size / 2;
-  const centerY = size / 2;
+  const centerY = size / 2 + containerDepth / 3; // Offset down to prevent top cutoff
 
   // Draw the container
   ctx.save();
   ctx.translate(centerX, centerY);
-  drawIsometricBox(ctx, 0, 0, containerWidth, containerHeight, containerDepth, CONTAINER_COLOR);
+  drawIsometricBox(ctx, 0, 0, containerWidth, containerHeight, containerDepth);
   ctx.restore();
-
-  // Add subtle glow effect
-  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size / 2);
-  gradient.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
-  gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
 
   // Save the image
   const buffer = canvas.toBuffer('image/png');
@@ -103,19 +182,19 @@ async function generateMetadataImage(width, height, outputPath) {
   ctx.fillRect(0, 0, width, height);
 
   // Calculate container position to center it
-  const scale = Math.min(width, height) / 300;
+  const scale = Math.min(width, height) / 250;
   const containerWidth = CONTAINER_WIDTH * scale;
   const containerHeight = CONTAINER_HEIGHT * scale;
   const containerDepth = CONTAINER_DEPTH * scale;
 
-  // Center the container
+  // Center the container with offset to prevent top cutoff
   const centerX = width / 2;
-  const centerY = height / 2;
+  const centerY = height / 2.5 + containerDepth / 3;
 
   // Draw the container
   ctx.save();
   ctx.translate(centerX, centerY);
-  drawIsometricBox(ctx, 0, 0, containerWidth, containerHeight, containerDepth, CONTAINER_COLOR);
+  drawIsometricBox(ctx, 0, 0, containerWidth, containerHeight, containerDepth);
   ctx.restore();
 
   // Add title text
@@ -126,15 +205,8 @@ async function generateMetadataImage(width, height, outputPath) {
 
   // Add subtitle
   ctx.font = `${Math.floor(height / 25)}px "Fira Code", monospace`;
-  ctx.fillStyle = '#10b981';
+  ctx.fillStyle = '#ffffff';
   ctx.fillText('3D-First UI/UX', centerX, height - height / 16);
-
-  // Add subtle glow effect
-  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height) / 2);
-  gradient.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
-  gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
 
   // Save the image
   const buffer = canvas.toBuffer('image/png');
