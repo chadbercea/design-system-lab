@@ -28,7 +28,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionStart, setTransitionStart] = useState<number | null>(null);
   const [hasTransitioned, setHasTransitioned] = useState(false);
-  const [doorState, setDoorState] = useState<'open' | 'closing' | 'closed'>(
+  const [doorState, setDoorState] = useState<'open' | 'opening' | 'closing' | 'closed'>(
     state === 'building' ? 'open' : state === 'error' ? 'open' : 'closed'
   );
   const [idleAnimationStart, setIdleAnimationStart] = useState<number | null>(null);
@@ -677,10 +677,25 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         terminalComplete={terminalComplete}
         shippingLabelComplete={shippingLabelComplete}
         dockerLogoTexture={dockerLogoTexture}
+        onDoorClick={() => {
+          // Toggle doors in ready state only
+          if (state === 'ready') {
+            if (doorState === 'closed') {
+              setDoorState('opening');
+            } else if (doorState === 'open') {
+              setDoorState('closing');
+            }
+          }
+        }}
         onAnimationComplete={() => {
-          setDoorState('closed');
-          // Start terminal text when doors finish closing
-          if (state === 'building' && terminalStart === null) {
+          // Handle animation completion based on current state
+          if (doorState === 'closing') {
+            setDoorState('closed');
+          } else if (doorState === 'opening') {
+            setDoorState('open');
+          }
+          // Start terminal text when doors finish closing in building state
+          if (state === 'building' && terminalStart === null && doorState === 'closing') {
             setTerminalStart(Date.now());
             // Camera: Hold front view to watch terminal text on left door
             setCameraPhase('terminal');

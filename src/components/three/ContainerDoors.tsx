@@ -5,11 +5,12 @@ import { CONTAINER_COLORS } from '@/lib/container-colors'
 import type { ContainerState } from '@/lib/container-colors'
 
 interface ContainerDoorsProps {
-  state: 'open' | 'closing' | 'closed'
+  state: 'open' | 'opening' | 'closing' | 'closed'
   containerState?: ContainerState
   wireframeMaterial: THREE.LineBasicMaterial | THREE.LineDashedMaterial
   buildingDoorOpacity?: number
   onAnimationComplete?: () => void
+  onDoorClick?: () => void
   terminalLines?: string[]
   terminalComplete?: boolean
   shippingLabelComplete?: boolean
@@ -62,7 +63,7 @@ const settleEffect = (t: number): number => {
   return t >= 1.0 ? 1.0 : t
 }
 
-export function ContainerDoors({ state, containerState, wireframeMaterial, buildingDoorOpacity = 0, onAnimationComplete, terminalLines = [], terminalComplete = false, shippingLabelComplete = false, dockerLogoTexture = null }: ContainerDoorsProps) {
+export function ContainerDoors({ state, containerState, wireframeMaterial, buildingDoorOpacity = 0, onAnimationComplete, onDoorClick, terminalLines = [], terminalComplete = false, shippingLabelComplete = false, dockerLogoTexture = null }: ContainerDoorsProps) {
   const leftDoorRef = useRef<THREE.Group>(null)
   const rightDoorRef = useRef<THREE.Group>(null)
   const leftDoorWireframeRef = useRef<THREE.LineSegments>(null)
@@ -92,12 +93,12 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
     }
   }, [terminalLines])
 
-  // Reset animation when state changes to closing
+  // Reset animation when state changes to closing or opening
   React.useEffect(() => {
-    if (state === 'closing') {
+    if (state === 'closing' || state === 'opening') {
       animationStartRef.current = Date.now()
       hasCompletedRef.current = false
-    } else if (state === 'open') {
+    } else if (state === 'open' || state === 'closed') {
       animationStartRef.current = null
       hasCompletedRef.current = false
     }
@@ -224,6 +225,30 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
           onAnimationComplete()
         }
       }
+    } else if (state === 'opening' && animationStartRef.current && leftDoorRef.current && rightDoorRef.current) {
+      const elapsed = (Date.now() - animationStartRef.current) / 1000
+      const totalDuration = ANIMATION.duration + ANIMATION.settleTime
+      const progress = Math.min(elapsed / ANIMATION.duration, 1.0)
+      const settledProgress = settleEffect(elapsed / ANIMATION.duration)
+
+      // Apply easing
+      const easedProgress = easeInOutCubic(settledProgress)
+
+      // Left door rotates from 0° (closed) to -90° (fully open outward)
+      const leftRotation = -(Math.PI / 2) * easedProgress
+      leftDoorRef.current.rotation.y = leftRotation
+
+      // Right door rotates from 0° (closed) to 90° (fully open outward)
+      const rightRotation = (Math.PI / 2) * easedProgress
+      rightDoorRef.current.rotation.y = rightRotation
+
+      // Check if animation is complete
+      if (elapsed >= totalDuration && !hasCompletedRef.current) {
+        hasCompletedRef.current = true
+        if (onAnimationComplete) {
+          onAnimationComplete()
+        }
+      }
     } else if (state === 'open' && leftDoorRef.current && rightDoorRef.current) {
       // Doors fully open outward at 90°
       leftDoorRef.current.rotation.y = -Math.PI / 2
@@ -254,7 +279,23 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
         position={[leftHingeX, CONTAINER.CENTER_Y, DOOR.zPosition]}
       >
         {/* Door panel - pivot is at left edge (hinge) */}
-        <mesh position={[DOOR.width / 2, 0, 0]}>
+        <mesh
+          position={[DOOR.width / 2, 0, 0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (containerState === 'ready' && onDoorClick) {
+              onDoorClick();
+            }
+          }}
+          onPointerOver={(e) => {
+            if (containerState === 'ready') {
+              document.body.style.cursor = 'pointer';
+            }
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
           <boxGeometry args={[DOOR.width, DOOR.height, DOOR.depth]} />
           <primitive object={doorMaterial} attach="material" />
         </mesh>
@@ -303,7 +344,23 @@ export function ContainerDoors({ state, containerState, wireframeMaterial, build
         position={[rightHingeX, CONTAINER.CENTER_Y, DOOR.zPosition]}
       >
         {/* Door panel - pivot is at right edge (hinge) */}
-        <mesh position={[-DOOR.width / 2, 0, 0]}>
+        <mesh
+          position={[-DOOR.width / 2, 0, 0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (containerState === 'ready' && onDoorClick) {
+              onDoorClick();
+            }
+          }}
+          onPointerOver={(e) => {
+            if (containerState === 'ready') {
+              document.body.style.cursor = 'pointer';
+            }
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
           <boxGeometry args={[DOOR.width, DOOR.height, DOOR.depth]} />
           <primitive object={doorMaterial} attach="material" />
         </mesh>
