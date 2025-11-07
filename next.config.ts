@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
   basePath: '/design-system-lab',
+  assetPrefix: '/design-system-lab/',
   images: {
     unoptimized: true,
   },
