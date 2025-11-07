@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AppStateProvider } from '@/lib/app-state-context';
 import { ContainerScene } from '@/components/three/ContainerScene';
 import type { ContainerState } from '@/lib/container-colors';
 
@@ -8,7 +9,8 @@ export default function ContainerDemoPage() {
   const [state, setState] = useState<ContainerState>('ready');
 
   return (
-    <main className="w-screen h-screen bg-gray-900 flex flex-col">
+    <AppStateProvider>
+      <main className="w-screen h-screen bg-gray-900 flex flex-col">
       {/* Header with controls */}
       <div className="bg-gray-800 border-b border-gray-700 p-4">
         <h1 className="text-2xl font-bold text-white mb-4">Interactive Container Demo</h1>
@@ -74,5 +76,6 @@ export default function ContainerDemoPage() {
         <ContainerScene state={state} />
       </div>
     </main>
+    </AppStateProvider>
   );
 }
