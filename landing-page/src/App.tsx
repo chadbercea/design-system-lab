@@ -51,18 +51,9 @@ function App() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md">
         <div className="container mx-auto px-6 py-8">
           <h1 className="text-4xl font-bold text-white mb-2">Design System Lab</h1>
-          <p className="text-zinc-400 text-lg mb-3">
+          <p className="text-zinc-400 text-lg">
             Chad Bercea's UI/UX Experiments & Design Playground
           </p>
-          <a
-            href="https://github.com/chadbercea"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1 w-fit"
-          >
-            <span>👨‍💻</span>
-            <span>GitHub Profile</span>
-          </a>
         </div>
       </header>
 
