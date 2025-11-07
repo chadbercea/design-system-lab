@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AppStateProvider } from "@/lib/app-state-context";
 import {
   PanelLayoutProvider,
   PanelLayout,
@@ -534,14 +535,16 @@ function PanelDemoContent() {
 
 export default function PanelDemoPage() {
   return (
-    <PanelLayoutProvider
-      defaultLeftPanelOpen={false}
-      defaultRightDrawerOpen={false}
-      defaultRightDrawerPinned={false}
-      defaultTopHistogramOpen={true}
-      defaultBottomTerminalOpen={false}
-    >
-      <PanelDemoContent />
-    </PanelLayoutProvider>
+    <AppStateProvider>
+      <PanelLayoutProvider
+        defaultLeftPanelOpen={false}
+        defaultRightDrawerOpen={false}
+        defaultRightDrawerPinned={false}
+        defaultTopHistogramOpen={true}
+        defaultBottomTerminalOpen={false}
+      >
+        <PanelDemoContent />
+      </PanelLayoutProvider>
+    </AppStateProvider>
   );
 }
