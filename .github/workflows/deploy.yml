@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Landing Page to GitHub Pages
 
 on:
   push:
@@ -27,15 +27,17 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: landing-page
         run: npm ci
 
-      - name: Build
+      - name: Build landing page
+        working-directory: landing-page
         run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: landing-page/dist
 
   deploy:
     environment:
