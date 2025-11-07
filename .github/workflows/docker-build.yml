@@ -1,0 +1,54 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build development image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.nextjs
+        target: development
+        push: false
+        tags: nextjs-dev:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build production image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.nextjs
+        target: production
+        push: false
+        tags: nextjs-prod:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Test production container
+      run: |
+        docker run -d --name test-container -p 8080:80 nextjs-prod:test
+        sleep 10
+        curl -f http://localhost:8080/ || exit 1
+        docker stop test-container
+
+    - name: Build summary
+      run: |
+        echo "✅ Development image built successfully" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Production image built successfully" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Production container tested successfully" >> $GITHUB_STEP_SUMMARY

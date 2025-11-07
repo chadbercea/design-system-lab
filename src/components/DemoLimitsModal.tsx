@@ -63,7 +63,7 @@ export function DemoLimitsModal({ isOpen, onClose }: DemoLimitsModalProps) {
         <div className="flex justify-center mb-6">
           <div className="bg-zinc-800/50 p-4 rounded-full">
             <img
-              src="/design-system-lab/docker-logo.svg"
+              src="/docker-logo.svg"
               alt="Docker"
               className="h-16 w-16"
             />
