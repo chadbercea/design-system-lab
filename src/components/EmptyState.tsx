@@ -111,7 +111,7 @@ export function EmptyState() {
         <div className="relative z-10 flex flex-col items-center gap-8 px-8 text-center animate-in fade-in duration-500">
           {/* Docker logo - WHITE */}
           <img
-            src="/docker-logo.svg"
+            src="/design-system-lab/docker-image-runner/docker-logo.svg"
             alt="Docker"
             className="h-24 w-24"
           />

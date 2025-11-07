@@ -13,15 +13,15 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: "Docker Desktop Reimagined",
   description: "A modern, 3D-first reimagining of Docker Desktop's UI/UX with glassmorphic design",
-  manifest: "/manifest.json",
+  manifest: "/design-system-lab/docker-image-runner/manifest.json",
   themeColor: "#000000",
   icons: {
     icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/design-system-lab/docker-image-runner/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/design-system-lab/docker-image-runner/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/design-system-lab/docker-image-runner/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
   openGraph: {

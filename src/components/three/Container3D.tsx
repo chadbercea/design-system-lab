@@ -161,7 +161,7 @@ export function Container3D({ state = 'ready' }: Container3DProps) {
         setDockerLogoTexture(texture);
       }
     };
-    img.src = '/docker-logo.svg';
+    img.src = '/design-system-lab/docker-image-runner/docker-logo.svg';
   }, []);
 
   // Building state glow material

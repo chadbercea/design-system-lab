@@ -62,7 +62,7 @@ export const ImageCrateModel: React.FC<ImageCrateProps> = ({
         setLogoTexture(texture);
       }
     };
-    img.src = '/docker-logo.svg';
+    img.src = '/design-system-lab/docker-image-runner/docker-logo.svg';
   }, []);
 
   // Create main crate material - Gray
