@@ -3,11 +3,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: 'export',
-  basePath: '/design-system-lab',
-  env: {
-    NEXT_PUBLIC_BASE_PATH: '/design-system-lab',
-  },
   images: {
     unoptimized: true,
   },

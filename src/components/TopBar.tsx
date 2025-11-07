@@ -95,7 +95,7 @@ export function TopBar({ onTerminalToggle }: TopBarProps) {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <img
-            src="/design-system-lab/docker-logo.svg"
+            src="/docker-logo.svg"
             alt="Docker"
             className="h-4 w-4"
           />

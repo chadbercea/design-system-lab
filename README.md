@@ -28,15 +28,32 @@ This project reimagines Docker Desktop's interface with a focus on:
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
+- Node.js 18+ OR Docker Desktop
+- npm or yarn (if running locally)
 
-### Installation
+### Option 1: Run with Docker (Recommended)
+
+Docker provides a consistent environment and prevents issues with local tooling:
 
 ```bash
 # Clone the repository
 git clone https://github.com/chadbercea/design-system-lab.git
-cd design-system-lab/.conductor/surabaya-v1
+cd design-system-lab/.conductor/seville
+
+# Start development server with hot-reload
+./docker-nextjs.sh dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+For complete Docker documentation, see [DOCKER.md](DOCKER.md).
+
+### Option 2: Run Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/chadbercea/design-system-lab.git
+cd design-system-lab/.conductor/seville
 
 # Install dependencies
 npm install
@@ -45,7 +62,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) with your browser to see the application.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
 ### Install as PWA
 
@@ -165,81 +182,55 @@ src/
 - **Image Cards**: sequential fade-in with 150ms stagger
 - **Container States**: smooth 2-3 second transitions
 
-## 🐳 Next Steps: Containerization
+## 🐳 Docker Support
 
-### Build Docker Image
+The app is fully containerized and runs as a self-contained Next.js application inside Docker. The container serves the app at root `/` with no hardcoded paths or deployment assumptions - it will run identically wherever the container is deployed.
 
-```bash
-# Create Dockerfile
-cat > Dockerfile << 'EOF'
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-RUN npm run build
-
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/out ./out
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["npx", "serve", "out", "-p", "3000"]
-EOF
-
-# Build the image
-docker build -t docker-desktop-reimagined:latest .
-
-# Test locally
-docker run -p 3000:3000 docker-desktop-reimagined:latest
-```
-
-### Push to Docker Hub
+### Quick Start with Docker
 
 ```bash
-# Login to Docker Hub
-docker login
+# Development with hot-reload
+./docker-nextjs.sh dev
 
-# Tag the image
-docker tag docker-desktop-reimagined:latest <your-username>/docker-desktop-reimagined:latest
+# Production build
+./docker-nextjs.sh prod
 
-# Push to Docker Hub
-docker push <your-username>/docker-desktop-reimagined:latest
+# View all commands
+./docker-nextjs.sh help
 ```
+
+### Docker Features
+
+- **Self-contained** - App runs at `/` with zero deployment assumptions
+- **Portable** - Container works identically on any Docker host
+- **Multi-stage builds** - Optimized image sizes for dev and prod
+- **Hot-reload** - Development mode with live code updates
+- **Production-ready** - Nginx-served static export at root path
+- **Consistent environment** - Same setup locally, in cloud, or anywhere
+- **Health checks** - Built-in container monitoring
+
+### Container Architecture
+
+- **Development**: Next.js dev server at `http://localhost:3000`
+- **Production**: Nginx serving static export at `http://localhost:8080`
+- **No basePath**: App serves from `/` regardless of deployment environment
+- **Volume mounts**: Source files mounted for hot-reload in development
+- **Named volumes**: Node modules cached for performance
+
+### Docker Files
+
+- `Dockerfile.nextjs` - Multi-stage Docker configuration (dev & prod)
+- `docker-compose.nextjs.yml` - Docker Compose orchestration
+- `docker-nextjs.sh` - Helper script for common operations
+- `DOCKER.md` - Complete Docker documentation
+
+See [DOCKER.md](DOCKER.md) for detailed documentation.
 
 ## 🔧 Development
 
 ### Environment Variables
 
-The project uses GitHub Pages deployment with a basePath:
-
-```bash
-NEXT_PUBLIC_BASE_PATH=/design-system-lab
-```
+No environment variables are required. The app is self-contained with no basePath configuration.
 
 ### Available Scripts
 
