@@ -10,7 +10,7 @@ export function PWARegister() {
       process.env.NODE_ENV === 'production'
     ) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/design-system-lab/docker-image-runner/sw.js')
         .then((registration) => {
           console.log('Service Worker registered:', registration);
         })
