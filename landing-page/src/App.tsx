@@ -51,9 +51,29 @@ function App() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md">
         <div className="container mx-auto px-6 py-8">
           <h1 className="text-4xl font-bold text-white mb-2">Design System Lab</h1>
-          <p className="text-zinc-400 text-lg">
-            A collection of UI/UX experiments and design explorations
+          <p className="text-zinc-400 text-lg mb-3">
+            Chad Bercea's UI/UX Experiments & Design Playground
           </p>
+          <div className="flex gap-4">
+            <a
+              href="https://chadbercea.github.io/portfolio-2025/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1"
+            >
+              <span>🌐</span>
+              <span>Portfolio</span>
+            </a>
+            <a
+              href="https://github.com/chadbercea"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1"
+            >
+              <span>👨‍💻</span>
+              <span>GitHub Profile</span>
+            </a>
+          </div>
         </div>
       </header>
 
@@ -125,12 +145,25 @@ function App() {
 
         <footer className="mt-16 pt-8 border-t border-zinc-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-zinc-500 text-sm">
-              Design System Lab - UI/UX Experiments & Explorations
-            </p>
+            <div>
+              <p className="text-zinc-500 text-sm mb-1">
+                Design System Lab - Chad Bercea's UI/UX Playground
+              </p>
+              <p className="text-zinc-600 text-xs">
+                Experimental design systems, 3D interfaces, and interaction patterns
+              </p>
+            </div>
             <div className="flex gap-4">
               <a
-                href="https://github.com/chadbercea/design-system-lab"
+                href="https://chadbercea.github.io/portfolio-2025/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 hover:text-white transition-colors text-sm"
+              >
+                Portfolio
+              </a>
+              <a
+                href="https://github.com/chadbercea"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-400 hover:text-white transition-colors text-sm"
@@ -138,12 +171,12 @@ function App() {
                 GitHub
               </a>
               <a
-                href="https://chadbercea.github.io/design-system-lab"
+                href="https://github.com/chadbercea/design-system-lab"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-400 hover:text-white transition-colors text-sm"
               >
-                Live Demo
+                Source Code
               </a>
             </div>
           </div>
