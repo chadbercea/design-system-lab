@@ -54,26 +54,15 @@ function App() {
           <p className="text-zinc-400 text-lg mb-3">
             Chad Bercea's UI/UX Experiments & Design Playground
           </p>
-          <div className="flex gap-4">
-            <a
-              href="https://chadbercea.github.io/portfolio-2025/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1"
-            >
-              <span>🌐</span>
-              <span>Portfolio</span>
-            </a>
-            <a
-              href="https://github.com/chadbercea"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1"
-            >
-              <span>👨‍💻</span>
-              <span>GitHub Profile</span>
-            </a>
-          </div>
+          <a
+            href="https://github.com/chadbercea"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1 w-fit"
+          >
+            <span>👨‍💻</span>
+            <span>GitHub Profile</span>
+          </a>
         </div>
       </header>
 
@@ -154,14 +143,6 @@ function App() {
               </p>
             </div>
             <div className="flex gap-4">
-              <a
-                href="https://chadbercea.github.io/portfolio-2025/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-400 hover:text-white transition-colors text-sm"
-              >
-                Portfolio
-              </a>
               <a
                 href="https://github.com/chadbercea"
                 target="_blank"
