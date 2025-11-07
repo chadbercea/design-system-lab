@@ -78,7 +78,7 @@ function App() {
                   </span>
                 ))}
               </div>
-              <a href="/docker-image-runner">
+              <a href="/design-system-lab/docker-image-runner">
                 <button className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-white text-black hover:bg-zinc-200 transition-colors">
                   Launch Demo
                 </button>
@@ -130,7 +130,7 @@ function App() {
             </p>
             <div className="flex gap-4">
               <a
-                href="/docker-image-runner"
+                href="/design-system-lab/docker-image-runner"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-400 hover:text-white transition-colors text-sm"

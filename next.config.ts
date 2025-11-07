@@ -3,8 +3,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export',
-  basePath: '/design-system-lab/docker-image-runner',
-  assetPrefix: '/design-system-lab/docker-image-runner/',
+  basePath: '/docker-image-runner',
+  assetPrefix: '/docker-image-runner/',
   images: {
     unoptimized: true,
   },
