@@ -1,61 +1,45 @@
-# Multi-stage Dockerfile for MUI Sandbox with Storybook
-# Optimized for both development hot-reload and production builds
-
-# Stage 1: Base dependencies
 FROM node:20-alpine AS base
 
-# Install system dependencies for node-gyp (needed by some npm packages)
+# Install dependencies only when needed
+FROM base AS deps
 RUN apk add --no-cache libc6-compat
-
 WORKDIR /app
 
-# Copy package files
 COPY package.json package-lock.json ./
-
-# Stage 2: Development dependencies
-FROM base AS deps
-
-# Install all dependencies (including devDependencies for Storybook)
 RUN npm ci
 
-# Stage 3: Development environment
-FROM base AS development
-
-# Copy node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy application source
-COPY . .
-
-# Expose Storybook port
-EXPOSE 6006
-
-# Set environment
-ENV NODE_ENV=development
-
-# Start Storybook with hot-reload
-CMD ["npm", "run", "storybook", "--", "--host", "0.0.0.0"]
-
-# Stage 4: Production build
+# Rebuild the source code only when needed
 FROM base AS builder
-
-# Copy node_modules from deps stage
+WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy application source
 COPY . .
 
-# Build Storybook for production
-RUN npm run build-storybook
+RUN npm run build
 
-# Stage 5: Production environment
-FROM nginx:alpine AS production
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
 
-# Copy built Storybook files from builder
-COPY --from=builder /app/storybook-static /usr/share/nginx/html
+ENV NODE_ENV=production
 
-# Expose port 80
-EXPOSE 80
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
