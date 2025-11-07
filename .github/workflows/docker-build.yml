@@ -25,6 +25,7 @@ jobs:
         file: ./Dockerfile.nextjs
         target: development
         push: false
+        load: true
         tags: nextjs-dev:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -36,6 +37,7 @@ jobs:
         file: ./Dockerfile.nextjs
         target: production
         push: false
+        load: true
         tags: nextjs-prod:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
