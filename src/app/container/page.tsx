@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { AppStateProvider } from '@/lib/app-state-context';
 import { ContainerScene } from '@/components/three/ContainerScene';
 import {
   Card,
@@ -31,6 +32,7 @@ import { Button } from '@/components/ui/button';
 export default function ContainerDemo() {
   const [animationKey, setAnimationKey] = useState(0);
   return (
+    <AppStateProvider>
     <div className="min-h-screen bg-zinc-950 p-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center">
@@ -164,5 +166,6 @@ export default function ContainerDemo() {
         </div>
       </div>
     </div>
+    </AppStateProvider>
   );
 }
