@@ -4,42 +4,42 @@ const projects = [
   {
     title: 'Docker Desktop Reimagined',
     description: 'A modern, 3D-first reimagining of Docker Desktop\'s UI/UX with glassmorphic design and real-time 3D visualizations.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/docker-desktop',
     tags: ['3D', 'Three.js', 'Docker', 'Glassmorphism'],
     status: 'active',
   },
   {
     title: 'Container Demo',
     description: 'Interactive container management demonstration with state transitions and animations.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/container-demo',
     tags: ['Docker', 'Animations', 'State Management'],
     status: 'active',
   },
   {
     title: 'Image Crate Demo',
     description: 'Explore 3D image crate system with Docker images rendered as interactive 3D objects.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/image-crate-demo',
     tags: ['3D', 'Docker Images', 'Interactive'],
     status: 'active',
   },
   {
     title: 'Panel Demo',
     description: 'Resizable panel system demonstration with smooth interactions and glassmorphic UI.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/panel-demo',
     tags: ['UI Components', 'Resizable', 'Layout'],
     status: 'active',
   },
   {
     title: 'Container View',
     description: 'Detailed container inspection and management interface.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/container',
     tags: ['Docker', 'Management', 'Details'],
     status: 'active',
   },
   {
     title: 'Settings Demo',
     description: 'Application settings interface with various configuration options.',
-    href: 'https://github.com/chadbercea/design-system-lab',
+    href: '/design-system-lab/docker-image-runner/demo-settings',
     tags: ['Settings', 'Configuration', 'UI'],
     status: 'active',
   },
@@ -92,7 +92,7 @@ function App() {
           <h3 className="text-2xl font-bold text-white mb-6">All Projects</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <a key={project.title} href={project.href} target="_blank" rel="noopener noreferrer">
+              <a key={project.title} href={project.href}>
                 <div className="h-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-900/80 transition-colors cursor-pointer rounded-xl p-6">
                   <div className="flex items-start justify-between mb-2">
                     <div className="font-semibold text-white text-xl">
@@ -130,7 +130,7 @@ function App() {
             </p>
             <div className="flex gap-4">
               <a
-                href="/design-system-lab/docker-image-runner"
+                href="https://github.com/chadbercea/design-system-lab"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-400 hover:text-white transition-colors text-sm"
